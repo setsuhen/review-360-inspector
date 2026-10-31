@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mock Storyline course</title>
+</head>
+<body>
+  <p>This stand-in is for checking the extension. It is not a published Storyline course.</p>
+  <div class="slide-window">
+    <button class="slide-object" type="button" data-model-id="choiceWrong" data-acc-text="No">No</button>
+    <button class="slide-object" type="button" data-model-id="choiceRight" data-acc-text="Yes">Yes</button>
+  </div>
+  <button class="cs-listitem cs-disabled" type="button">Locked menu item</button>
+  <script>
+    var vars = {
+      PlayerName: "Ada",
+      Score: 1,
+      Passed: false,
+      "Results.PassPercent": 80,
+      "Results.ScorePercent": 10,
+      "_playerVars.#menuProgress": 25
+    };
+    var scene = { title: "Start" };
+    var slides = [
+      { id: "slide1", title: "Welcome", scene: scene, viewed: false },
+      { id: "slide2", title: "Check", scene: scene, viewed: false }
+    ];
+    slides[1].quiz = {
+      passPercent: 80,
+      scorePercent: 10,
+      choices: [
+        { id: "choiceWrong", lmstext: "No", correct: false },
+        { id: "choiceRight", lmstext: "Yes", correct: true }
+      ],
+      numeric: { correctValue: 42, acceptableAnswers: ["42", "forty-two"] }
+    };
+    var current = slides[1];
+    var payroll = { name: "Salary", type: "number", value: 999999 };
+    globalThis.payroll = payroll;
+    globalThis.DS = {
+      presentation: {
+        title: "Mock course",
+        navigation: { flow: "restricted" },
+        variables: [
+          { name: "PlayerName", type: "string", value: "" },
+          { name: "Score", type: "number", value: 0 },
+          { name: "Passed", type: "boolean", value: false },
+          { name: "Results.PassPercent", type: "number", value: 80 },
+          { name: "Results.ScorePercent", type: "number", value: 10 }
+        ],
+        getFlatSlides: function () { return slides; }
+      },
+      windowManager: {
+        getCurrentWindowSlide: function () { return current; },
+        requestSlideForReview: function (slide) { current = slide; }
+      }
+    };
+    function read(name) { return Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : undefined; }
+    function write(name, value) { vars[name] = value; }
+    globalThis.getVar = read;
+    globalThis.setVar = write;
+    globalThis.GetPlayer = function () {
+      return { GetVar: read, SetVar: write };
+    };
+  </script>
+</body>
+</html>

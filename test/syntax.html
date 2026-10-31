@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>syntax</title>
+</head>
+<body>
+  <pre id="out">RUNNING</pre>
+  <script>
+    window.onerror = function (message) {
+      document.getElementById("out").textContent = "ERR " + message;
+    };
+    window.chrome = {
+      storage: { local: { get: function () { return Promise.resolve({}); }, set: function () { return Promise.resolve(); } } },
+      tabs: { query: function () { return Promise.resolve([]); } },
+      scripting: { executeScript: function () { return Promise.resolve([]); } },
+      runtime: { onInstalled: { addListener: function () {} } },
+      sidePanel: { setPanelBehavior: function () {} }
+    };
+    var request = new XMLHttpRequest();
+    request.open("GET", "../panel.html", false);
+    request.send(null);
+    var doc = new DOMParser().parseFromString(request.responseText, "text/html");
+    Array.prototype.slice.call(doc.body.children).forEach(function (node) {
+      if (node.tagName !== "SCRIPT") document.body.appendChild(document.importNode(node, true));
+    });
+  </script>
+  <script src="../inspector-core.js"></script>
+  <script src="../page-bridge.js"></script>
+  <script src="../panel.js"></script>
+  <script src="../background.js"></script>
+  <script>
+    setTimeout(function () {
+      var out = document.getElementById("out");
+      if (out.textContent !== "RUNNING") return;
+      var problems = [];
+      if (document.querySelectorAll("[role=tab]").length !== 5) problems.push("expected 5 tabs");
+      if (!document.getElementById("panel-captions")) problems.push("captions tab missing");
+      if (!document.getElementById("panel-notes")) problems.push("notes tab missing");
+      if (document.getElementById("var-details")) problems.push("course variables still present");
+      if (document.querySelector("select")) problems.push("dropdown still present");
+      if (!/Never changes the published course file\./.test(document.querySelector(".promise").textContent)) problems.push("header line wrong");
+      if (document.getElementById("panel-disconnected").hidden) problems.push("disconnected state not shown");
+      if (!document.getElementById("notes-body") || !document.getElementById("copy-notes")) problems.push("notes section missing");
+      // Chrome refuses to inject a file holding a Unicode noncharacter ("isn't UTF-8 encoded").
+      var refused = new RegExp("[" + String.fromCharCode(0xFDD0) + "-" + String.fromCharCode(0xFDEF) + String.fromCharCode(0xFFFE) + String.fromCharCode(0xFFFF) + "]");
+      ["../inspector-core.js", "../page-bridge.js"].forEach(function (path) {
+        var file = new XMLHttpRequest();
+        file.open("GET", path, false);
+        file.send(null);
+        if (refused.test(file.responseText)) problems.push(path + " has a character Chrome will not inject");
+      });
+      document.getElementById("tab-quiz").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      out.textContent = problems.length ? "ERR " + problems.join("; ") : "SYNTAX-OK";
+    }, 300);
+  </script>
+</body>
+</html>

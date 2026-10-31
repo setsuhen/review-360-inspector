@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Review 360 Inspector",
+  "version": "2.4.0",
+  "minimum_chrome_version": "111",
+  "description": "Check alt text, decorative images, closed captions, and notes in a published Storyline or Review 360 course. Never changes the published course file.",
+  "permissions": ["scripting", "storage", "sidePanel", "webNavigation"],
+  "host_permissions": ["<all_urls>", "file:///*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open Review 360 Inspector",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "devtools_page": "devtools.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

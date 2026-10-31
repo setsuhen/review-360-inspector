@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review 360 Inspector</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <svg hidden aria-hidden="true" focusable="false">
+    <symbol id="i-notes" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-presentation" viewBox="0 0 24 24"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/></symbol>
+    <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-captions" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 3v6h6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+  </svg>
+
+  <header class="header">
+    <div class="header-row">
+      <div class="brand">
+        <img class="brand-mark" src="icons/mark.svg" alt="">
+        <h1><span class="brand-name">Review 360 Inspector</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="refresh" type="button" class="icon-btn" aria-label="Refresh"><svg aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        <button id="theme" type="button" class="icon-btn" aria-label="Switch theme"><svg aria-hidden="true"><use href="#i-theme"/></svg></button>
+      </div>
+    </div>
+    <p class="promise"><svg aria-hidden="true"><use href="#i-eye"/></svg>Never changes the published course file.</p>
+    <div id="status" class="status-pill" role="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="status-main" class="status-main">Looking for a Storyline course on this tab…</span>
+      <span id="status-counts" class="status-counts"></span>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Sections">
+    <div role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-slides" aria-controls="panel-slides" aria-selected="true" data-tab="slides">
+        <svg aria-hidden="true"><use href="#i-presentation"/></svg><span>Slides</span>
+      </button>
+      <button type="button" role="tab" id="tab-quiz" aria-controls="panel-quiz" aria-selected="false" tabindex="-1" data-tab="quiz">
+        <svg aria-hidden="true"><use href="#i-circle-check"/></svg><span>Knowledge check</span>
+      </button>
+      <button type="button" role="tab" id="tab-alt" aria-controls="panel-alt" aria-selected="false" tabindex="-1" data-tab="alt">
+        <svg aria-hidden="true"><use href="#i-image"/></svg><span>Alt text</span>
+      </button>
+      <button type="button" role="tab" id="tab-captions" aria-controls="panel-captions" aria-selected="false" tabindex="-1" data-tab="captions">
+        <svg aria-hidden="true"><use href="#i-captions"/></svg><span>Captions</span>
+      </button>
+      <button type="button" role="tab" id="tab-notes" aria-controls="panel-notes" aria-selected="false" tabindex="-1" data-tab="notes">
+        <svg aria-hidden="true"><use href="#i-notes"/></svg><span>Notes</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="slide-bar" id="slide-bar">
+    <div class="slide-bar-text">
+      <span class="eyebrow" id="bar-eyebrow">ON SCREEN</span>
+      <span class="slide-bar-title" id="bar-title">—</span>
+    </div>
+    <div class="slide-bar-actions">
+      <button id="prev-slide" type="button" class="icon-btn" aria-label="Previous slide"><svg aria-hidden="true"><use href="#i-prev"/></svg></button>
+      <button id="next-slide" type="button" class="icon-btn" aria-label="Next slide"><svg aria-hidden="true"><use href="#i-next"/></svg></button>
+      <button id="reset-slide" type="button" class="icon-btn with-text" aria-label="Reset this slide only"><svg aria-hidden="true"><use href="#i-reset"/></svg><span>Reset slide</span></button>
+    </div>
+  </div>
+
+  <main class="body" id="body">
+    <section id="panel-disconnected" class="sheet" hidden>
+      <p class="empty">Open a Storyline course or a Review 360 page, then press Refresh.</p>
+      <p id="help" class="help" hidden></p>
+    </section>
+
+    <section id="panel-slides" class="sheet" role="tabpanel" aria-labelledby="tab-slides">
+      <p class="intro">Where you are in the course, and how to move through it.</p>
+      <div class="card">
+        <button id="play-through" type="button" class="btn primary lg" aria-pressed="false">Play through</button>
+        <p class="help">Plays each slide for its published length, then presses Next. Holds on each knowledge check and continues once you leave it.</p>
+        <div class="status-row">
+          <span class="state"><span id="play-dot" class="state-dot" aria-hidden="true"></span><span id="play-state">Stopped</span></span>
+          <span class="state"><svg id="lock-icon" aria-hidden="true"><use href="#i-lock"/></svg><span id="lock-line">Course menu: locked by the course</span></span>
+        </div>
+        <p id="play-detail" class="help" hidden></p>
+      </div>
+      <div class="search">
+        <label for="slide-filter" class="sr-only">Filter slides</label>
+        <svg aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="slide-filter" type="search" placeholder="Filter slides" autocomplete="off">
+      </div>
+      <div id="slide-list" class="slide-list"></div>
+    </section>
+
+    <section id="panel-quiz" class="sheet" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+      <div id="quiz-empty" hidden>
+        <p class="empty">This slide has no knowledge check.</p>
+        <button id="next-question" type="button" class="text-btn link">Go to the next question ›</button>
+      </div>
+      <div id="quiz-body">
+        <div class="card dark-card">
+          <span class="eyebrow on-dark">THIS QUESTION</span>
+          <div class="dark-card-row">
+            <span id="question-state" class="state-line">Not answered</span>
+            <button id="reset-slide-quiz" type="button" class="btn primary sm" aria-label="Reset this slide only">Reset slide</button>
+          </div>
+          <p class="help on-dark">Puts the slide back the way it opened: answer, feedback, and attempts cleared, and the choices selectable again. Other slides and the course score stay as they are. Answer the question in the course to see each feedback state.</p>
+        </div>
+        <div class="card">
+          <h2 class="card-title">See the answer</h2>
+          <div class="switch-row">
+            <div>
+              <span class="switch-label">Outline the correct choice</span>
+              <span class="help">Draws a box on the slide. Doesn't answer.</span>
+            </div>
+            <button id="answers" type="button" role="switch" aria-checked="false" class="switch" aria-label="Outline the correct choice"><span class="knob"></span></button>
+          </div>
+          <dl id="answer-box" class="answer-box"></dl>
+        </div>
+      </div>
+      <div id="all-checks">
+        <h2 class="eyebrow" id="all-checks-heading">ALL KNOWLEDGE CHECKS</h2>
+        <div id="quiz-list" class="check-list"></div>
+      </div>
+      <details id="slide-details" class="details">
+        <summary><span class="summary-text"><span>Slide details</span><span id="details-summary" class="help"></span></span><svg aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+        <div id="more-list" class="details-body"></div>
+      </details>
+    </section>
+
+    <section id="panel-alt" class="sheet" role="tabpanel" aria-labelledby="tab-alt" hidden>
+      <p class="intro">Images and buttons on this slide, top to bottom, with the alt text a screen reader reads. Click one to highlight it on the slide; click it again to clear.</p>
+      <div class="switch-row">
+        <span class="switch-label">Images and buttons only</span>
+        <button id="alt-filter" type="button" role="switch" aria-checked="true" class="switch" aria-label="Images and buttons only"><span class="knob"></span></button>
+      </div>
+      <h2 class="eyebrow" id="alt-count">OBJECTS · 0</h2>
+      <div id="object-list" class="object-list"></div>
+    </section>
+
+    <section id="panel-captions" class="sheet" role="tabpanel" aria-labelledby="tab-captions" hidden>
+      <p class="intro">Closed captions for the slide on screen, in order, as text you can copy without playing the slide. The list follows the course when the slide changes.</p>
+      <div class="caption-tools">
+        <h2 class="eyebrow" id="caption-count">CLOSED CAPTIONS · 0</h2>
+        <button id="copy-captions" type="button" class="text-btn">Copy captions<svg aria-hidden="true"><use href="#i-copy"/></svg></button>
+      </div>
+      <div id="caption-list" class="caption-list"></div>
+    </section>
+
+    <section id="panel-notes" class="sheet" role="tabpanel" aria-labelledby="tab-notes" hidden>
+      <p class="intro">The slide's notes as text you can copy. They follow the course when the slide changes.</p>
+      <div class="caption-tools">
+        <h2 class="eyebrow">NOTES</h2>
+        <button id="copy-notes" type="button" class="text-btn">Copy notes<svg aria-hidden="true"><use href="#i-copy"/></svg></button>
+      </div>
+      <div id="notes-body" class="notes-body"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <button id="download-snapshot" type="button" class="btn ghost sm">Save a copy of this view</button>
+    <p class="caption">Updates every 2 seconds. Pauses while you type.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span id="toast-text"></span></div>
+  <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
+
+  <script src="inspector-core.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use Review 360 Inspector</title>
+<style>
+
+  @font-face { font-family: "UI Book"; src: local("Segoe UI"), local("SegoeUI"); font-weight: 400; }
+  @font-face { font-family: "UI Book"; src: local("Segoe UI Semibold"), local("SegoeUI-Semibold"); font-weight: 700; }
+  @font-face { font-family: "UI Heavy"; src: local("Segoe UI Semibold"), local("SegoeUI-Semibold"); font-weight: 400 900; }
+  @font-face { font-family: "UI Black"; src: local("Segoe UI Bold"), local("SegoeUI-Bold"); font-weight: 400 900; }
+  :root {
+    --accent: #4f46e5; --accent-dark: #4338ca; --black: #0f172a; --ink: #0f172a; --steel: #64748b;
+    --cloud: #f8fafc; --mist: #f1f5f9; --gray: #cbd5e1; --line: #e2e8f0; --ground: #eef1f6;
+    --green-bg: #ecfdf5; --green: #047857; --yellow-bg: #fffbeb; --yellow-edge: #fcd34d;
+    --blue-bg: #f0f9ff; --blue: #0369a1;
+    --sans: "UI Book", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --heavy: "UI Heavy", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --black-face: "UI Black", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @page { size: letter; margin: 0.5in; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  strong, b { font-family: var(--heavy); font-weight: 400; }
+
+  /* Pages: white cards on the grey ground on screen; one printed page each. */
+  .page { position: relative; background: #fff; max-width: 8.5in; margin: 28px auto; padding: 0.6in 0.65in 0.55in; border-radius: 22px; box-shadow: 0 6px 20px rgba(20,18,18,.08), 0 2px 6px rgba(20,18,18,.05); }
+  .page + .page { margin-top: 24px; }
+  @media print {
+    body { background: #fff; zoom: .9; }
+    .page, .page + .page { margin: 0; padding: 0; max-width: none; border-radius: 0; box-shadow: none; break-after: page; }
+    .page:last-child { break-after: auto; }
+    /* Room for the markers that sit on a mock's left edge, inside the printable area. */
+    .split { padding-left: 16px; }
+  }
+  .frame-tl, .frame-br { position: absolute; width: 23px; height: 32px; }
+  .frame-tl { left: -4.7px; top: -4.7px; }
+  .frame-br { right: -4.7px; bottom: -4.7px; }
+  @media print { .page > .frame-tl, .page > .frame-br { display: none; } }
+
+  .eyebrow { font: 12px/1.3 var(--heavy); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  h1 { font: 44px/1.02 var(--black-face); letter-spacing: -.025em; margin-bottom: 14px; }
+  h2 { font: 32px/1.05 var(--black-face); letter-spacing: -.02em; margin-bottom: 10px; }
+  h3 { font: 19px/1.25 var(--heavy); letter-spacing: -.005em; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .dot { color: var(--accent); }
+  .lead { font-size: 18px; line-height: 1.55; max-width: 62ch; margin-bottom: 14px; }
+  p { margin-bottom: 10px; max-width: 70ch; }
+  .muted { color: var(--steel); }
+  ul.plain { padding-left: 20px; margin: 6px 0 10px; }
+  ul.plain li { margin: 4px 0; }
+  .rule { width: 60px; height: 3px; background: var(--accent); margin: 6px 0 18px; }
+
+  .num { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--black); color: #fff; font: 15px/30px var(--heavy); text-align: center; }
+  .step { break-inside: avoid; margin: 0 0 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; align-items: start; }
+  .step > .text { min-width: 0; }
+  .step.wide { grid-template-columns: 1fr; }
+  .callout { background: var(--cloud); border-radius: 16px; padding: 14px 18px; margin: 12px 0; break-inside: avoid; }
+  .callout.warn { background: #fff; box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+  kbd { font: 13px var(--mono); background: var(--cloud); border: 1px solid var(--gray); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; }
+  code { font: 13px var(--mono); background: var(--cloud); border-radius: 6px; padding: 1px 6px; }
+
+  /* "Click here" marks: a red ring and a black label. */
+  .hot { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+  .label { display: inline-block; background: var(--black); color: #fff; font: 11px/1.2 var(--heavy); letter-spacing: .04em; border-radius: 999px; padding: 4px 9px; white-space: nowrap; vertical-align: middle; }
+
+  /* Mock windows */
+  .window { border: 1px solid var(--gray); border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(20,18,18,.06); break-inside: avoid; }
+  .chrome { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--cloud); border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--steel); }
+  .dots { display: flex; gap: 5px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--gray); display: block; }
+  .addr { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tool { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); flex: none; }
+  .tool svg { width: 16px; height: 16px; }
+  .tool img { width: 18px; height: 18px; border-radius: 4px; }
+  .screen { padding: 14px; background: #fafafa; }
+
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ui-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--gray); background: #fff; border-radius: 8px; padding: 6px 11px; font: 13px var(--heavy); }
+  .ui-btn.blue { background: #0b57d0; border-color: #0b57d0; color: #fff; }
+  .toggle { width: 36px; height: 20px; border-radius: 999px; background: #0b57d0; position: relative; display: inline-block; flex: none; }
+  .toggle::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 3px; right: 3px; }
+  .toggle.off { background: var(--gray); }
+  .toggle.off::after { right: auto; left: 3px; }
+  .file { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; }
+  .file + .file { margin-top: 4px; }
+  .file svg { width: 20px; height: 20px; color: #c8a24a; }
+  .file.sel { background: #dbeafe; }
+  .menu { display: inline-flex; flex-direction: column; background: #fff; border: 1px solid var(--gray); border-radius: 10px; padding: 6px; box-shadow: 0 6px 20px rgba(20,18,18,.12); font-size: 13px; min-width: 170px; }
+  .menu > span { padding: 6px 10px; border-radius: 6px; }
+  .ext-card { display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 13px; }
+  .ext-card img { width: 36px; height: 36px; }
+  .ext-card b { display: block; font-size: 14px; }
+
+  /* Panel mock: the real panel, drawn to scale at about 85%. */
+  .pm { width: 100%; max-width: 330px; border: 1px solid var(--gray); border-radius: 14px; overflow: hidden; background: #fff; font-size: 12.5px; line-height: 1.4; break-inside: avoid; position: relative; }
+  .pm-head { background: #000; color: #fff; padding: 11px 13px; }
+  .pm-brand { display: flex; align-items: center; gap: 9px; }
+  .pm-brand img { width: 24px; }
+  .pm-title { flex: 1; min-width: 0; padding-left: 9px; border-left: 1px solid rgba(255,255,255,.28); }
+  .pm-kicker { font: 8.5px/1.3 var(--heavy); letter-spacing: .16em; color: var(--gray); }
+  .pm-name { font: 14.5px/1.1 var(--black-face); letter-spacing: -.02em; }
+  .pm-sq { width: 28px; height: 28px; border: 1.5px solid rgba(255,255,255,.3); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+  .pm-sq svg { width: 14px; height: 14px; }
+  .pm-promise { font-size: 10.5px; color: var(--gray); margin: 6px 0 8px; display: flex; gap: 5px; align-items: center; }
+  .pm-promise svg { width: 11px; height: 11px; }
+  .pm-status { background: #1f1c1d; box-shadow: inset 0 0 0 1px #3a3536; border-radius: 9px; padding: 6px 10px; display: flex; align-items: center; gap: 7px; font: 11px var(--heavy); }
+  .pm-status i { width: 7px; height: 7px; border-radius: 50%; background: #14a579; flex: none; }
+  .pm-status span:last-child { margin-left: auto; color: var(--gray); font-family: var(--sans); }
+  .pm-tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
+  .pm-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 50px; padding: 5px 2px; font: 9.5px/1.15 var(--heavy); color: var(--steel); text-align: center; border-bottom: 3px solid transparent; }
+  .pm-tab svg { width: 16px; height: 16px; }
+  .pm-tab.on { color: var(--ink); border-bottom-color: var(--accent); }
+  .pm-tab.on svg { color: var(--accent); }
+  .pm-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 13px; background: var(--cloud); border-bottom: 1px solid var(--line); }
+  .pm-bar .t { flex: 1; min-width: 0; }
+  .pm-eb { font: 9px/1.3 var(--heavy); letter-spacing: .14em; color: var(--accent); text-transform: uppercase; }
+  .pm-bar b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-ib { width: 26px; height: 26px; border: 1.5px solid var(--gray); border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: #fff; }
+  .pm-ib svg { width: 13px; height: 13px; }
+  .pm-ib.txt { width: auto; padding: 0 7px; gap: 4px; font: 10.5px var(--heavy); }
+  .pm-body { padding: 11px 13px; display: flex; flex-direction: column; gap: 9px; }
+  .pm-intro { font-size: 10.5px; color: var(--steel); }
+  .pm-sec { font: 9px/1.3 var(--heavy); letter-spacing: .14em; color: var(--accent); text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pm-copy { font: 10px var(--heavy); letter-spacing: 0; text-transform: none; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 999px; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px; }
+  .pm-copy svg { width: 10px; height: 10px; }
+  .pm-card { position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; box-shadow: 0 1px 2px rgba(20,18,18,.06); background: #fff; }
+  .pm-card.sel { border-color: var(--ink); }
+  .pm-card .frame-tl, .pm-card .frame-br { width: 11px; height: 16px; }
+  .pm-card .frame-tl { left: -2.4px; top: -2.4px; }
+  .pm-card .frame-br { right: -2.4px; bottom: -2.4px; }
+  .pm-type { font: 8.5px/1.3 var(--heavy); letter-spacing: .14em; color: var(--steel); text-transform: uppercase; }
+  .pm-alt { font: 12px/1.35 var(--heavy); margin: 2px 0 6px; padding-right: 30px; }
+  .pm-alt.none { font-family: var(--sans); color: var(--steel); }
+  .pm-cp { position: absolute; right: 9px; top: 9px; }
+  .pm-hl { position: absolute; right: 42px; top: 15px; background: #000; color: #fff; font: 9px var(--heavy); border-radius: 999px; padding: 2px 7px; }
+  .pm-card.sel .pm-alt { padding-right: 100px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 9px 3px 7px; font: 10.5px/1.3 var(--heavy); }
+  .badge svg { width: 11px; height: 11px; }
+  .badge.written { background: var(--green-bg); color: var(--green); }
+  .badge.warn { background: var(--yellow-bg); color: var(--ink); box-shadow: inset 0 0 0 1px var(--yellow-edge); }
+  .badge.missing { background: var(--accent); color: #fff; }
+  .badge.decorative { background: var(--blue-bg); color: var(--blue); }
+  .pm-switch { display: flex; align-items: center; justify-content: space-between; font: 11.5px var(--heavy); }
+  .pm-sw { width: 34px; height: 20px; border-radius: 999px; background: #000; position: relative; }
+  .pm-sw::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 3px; right: 3px; }
+  .pm-sw.off { background: var(--gray); }
+  .pm-sw.off::after { right: auto; left: 3px; }
+  .pm-btn { background: var(--accent); color: #fff; border-radius: 999px; text-align: center; padding: 10px; font: 12.5px var(--heavy); }
+  .pm-help { font-size: 10px; color: var(--steel); }
+  .pm-row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; padding: 6px 7px; border-radius: 8px; font-size: 11.5px; }
+  .pm-row .n { font: 10px var(--mono); color: var(--steel); }
+  .pm-row.cur { background: #000; color: #fff; }
+  .pm-row.cur .n { color: var(--gray); }
+  .pm-tag { font: 9px var(--heavy); border: 1.5px solid var(--gray); border-radius: 999px; padding: 2px 6px; white-space: nowrap; }
+  .pm-row.cur .pm-tag { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pm-filter { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 11px; color: var(--steel); display: flex; align-items: center; gap: 6px; }
+  .pm-filter svg { width: 11px; height: 11px; }
+  .pm-dark { background: #000; color: #fff; border-radius: 12px; padding: 10px 11px; }
+  .pm-dark .pm-type { color: var(--gray); }
+  .pm-dark .r { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 3px 0 4px; font: 12px var(--heavy); }
+  .pm-dark .rb { background: var(--accent); border-radius: 999px; padding: 5px 10px; font: 10px var(--heavy); }
+  .pm-dark p { font-size: 9.5px; color: var(--gray); margin: 0; }
+  .pm-answer { background: var(--cloud); border-radius: 8px; padding: 7px 9px; font-size: 10.5px; display: grid; grid-template-columns: 76px 1fr; gap: 3px 8px; }
+  .pm-answer dt { color: var(--steel); }
+  .pm-answer dd { margin: 0; font-family: var(--heavy); }
+  .pm-check { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 11px; }
+  .pm-check:first-child { border-top: 0; }
+  .pm-check b { display: block; }
+  .pm-check span.sub { color: var(--steel); font-size: 10px; }
+  .pm-check .open { color: var(--accent); font-family: var(--heavy); flex: none; }
+  .pm-capg { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px 4px; }
+  .pm-cap { display: grid; grid-template-columns: 38px 1fr; gap: 7px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 11px; }
+  .pm-capg .pm-sec + .pm-cap { border-top: 0; }
+  .pm-cap .tm { font: 9.5px var(--mono); background: var(--cloud); border-radius: 5px; padding: 1px 5px; justify-self: start; align-self: start; }
+  .pm-notes { border: 1px solid var(--line); border-radius: 12px; padding: 10px 11px; font-size: 11px; line-height: 1.5; }
+  .pm-foot { border-top: 1px solid var(--line); background: var(--cloud); padding: 9px 13px 10px; text-align: center; }
+  .pm-foot .b { background: #000; color: #fff; border-radius: 999px; padding: 7px; font: 11px var(--heavy); }
+  .pm-foot .c { font-size: 9.5px; color: var(--steel); margin-top: 5px; }
+
+  /* Numbered markers on a mock, matched to a legend. */
+  .mk { position: absolute; width: 21px; height: 21px; border-radius: 50%; background: #000; color: #fff; font: 11px/21px var(--heavy); text-align: center; letter-spacing: 0; text-transform: none; box-shadow: 0 0 0 2px #fff; z-index: 2; }
+  /* Markers anchored to the element they label. */
+  .anchor { position: relative; }
+  .mk.at-top { left: 50%; top: -16px; transform: translateX(-50%); }
+  .mk.at-left { left: -23px; top: 50%; transform: translateY(-50%); }
+  .mk.at-edge { left: -11px; top: 50%; transform: translateY(-50%); }
+  .legend { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .legend li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+  .legend .n { width: 24px; height: 24px; border-radius: 50%; background: #000; color: #fff; font: 12px/24px var(--heavy); text-align: center; }
+
+  .split { display: grid; grid-template-columns: 330px 1fr; gap: 28px; align-items: start; }
+  .glance { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0 6px; }
+  .glance div { background: var(--cloud); border-radius: 14px; padding: 12px 10px; text-align: center; font-size: 12.5px; line-height: 1.35; }
+  .glance svg { width: 24px; height: 24px; color: var(--accent); display: block; margin: 0 auto 6px; }
+  .glance b { display: block; font-size: 13.5px; margin-bottom: 2px; }
+
+  .hero { display: grid; grid-template-columns: 1fr 230px; min-height: 280px; }
+  .hero .course { background: #f4f6f8; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .hero .course .bar { height: 10px; border-radius: 6px; background: #1d4f91; width: 70%; }
+  .hero .course .t { font: 20px/1.1 var(--heavy); color: #1d4f91; }
+  .hero .course .pic { flex: 1; border-radius: 10px; background: #dbe5ef; display: flex; align-items: center; justify-content: center; color: #1d4f91; }
+  .hero .course .pic svg { width: 46px; height: 46px; }
+  .hero .course .ctl { display: flex; gap: 6px; }
+  .hero .course .ctl i { height: 6px; border-radius: 4px; background: #c8d3df; flex: 1; }
+  .hero .side { border-left: 1px solid var(--gray); }
+  .hero .side .pm { max-width: none; border: 0; border-radius: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 13.5px; break-inside: auto; }
+  th { background: var(--cloud); font: 11px var(--heavy); letter-spacing: .12em; text-transform: uppercase; color: var(--steel); text-align: left; padding: 9px 10px; }
+  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr { break-inside: avoid; }
+  td:first-child { width: 36%; }
+  .foot-note { margin-top: 18px; font-size: 12px; color: var(--steel); }
+  /* Screens only: a printed letter page is 720px wide and must keep the two-column layout. */
+  @media screen and (max-width: 760px) {
+    .page { padding: 28px 20px; border-radius: 0; }
+    .step, .split, .hero { grid-template-columns: 1fr; }
+    .glance { grid-template-columns: repeat(2, 1fr); }
+  }
+  /* Review 360 Inspector look: slate header, indigo accents, as in the panel. */
+  .pm-head { background: #0f172a; }
+  .pm-brand img { width: 24px; height: 24px; border-radius: 6px; }
+  .pm-title { padding-left: 0; border-left: 0; }
+  .pm-sq { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); }
+  .pm-promise { color: #94a3b8; }
+  .pm-status { background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+  .pm-status i { background: #34d399; box-shadow: 0 0 0 2px rgba(52,211,153,.2); }
+  .pm-status span:last-child { color: #94a3b8; }
+  .eyebrow, .pm-eb, .pm-sec, .pm-tab.on svg, .pm-check .open, .glance svg { color: var(--accent-dark); }
+  .pm-copy { color: var(--accent-dark); border: 1px solid var(--accent); }
+  .pm-card.sel { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.25); }
+  .pm-hl { background: #0f172a; }
+  .badge.warn { color: #92400e; }
+  .badge.missing { background: #e11d48; }
+  .pm-sw { background: var(--accent); }
+  .pm-row.cur { background: #eef2ff; color: #3730a3; box-shadow: inset 3px 0 0 var(--accent); }
+  .pm-row.cur .n { color: var(--accent-dark); }
+  .pm-dark { background: #0f172a; }
+  .pm-dark .pm-type, .pm-dark p { color: #94a3b8; }
+  .pm-cap .tm { background: #eef2ff; color: #3730a3; }
+  .pm-foot .b { background: #0f172a; }
+  .pm-ib, .pm-tag { border-width: 1px; }
+  .mk, .legend .n { background: #0f172a; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-presentation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/></g></symbol>
+    <symbol id="i-check-c" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></g></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></g></symbol>
+    <symbol id="i-captions" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></g></symbol>
+    <symbol id="i-notes" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></g></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></g></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 3v6h6"/></g></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></g></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></g></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 3a2 2 0 0 1 4 0v2h4a1 1 0 0 1 1 1v4h-2a2 2 0 0 0 0 4h2v4a1 1 0 0 1-1 1h-4v-2a2 2 0 0 0-4 0v2H6a1 1 0 0 1-1-1v-4h2a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1h4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3Z"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" fill="currentColor"/></symbol>
+    <symbol id="i-zip" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6"/><path d="M10 7h2M10 10h2M10 13h2M10 16h2" stroke-linecap="round"/></g></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="8" r="3"/><circle cx="5.5" cy="9.5" r="2.2"/><circle cx="18.5" cy="9.5" r="2.2"/><path d="M6 20v-2a6 6 0 0 1 12 0v2M2 19v-1a4 4 0 0 1 4-4M22 19v-1a4 4 0 0 0-4-4"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============ 1. What it is ============ -->
+<section class="page">
+  <p class="eyebrow">Job aid</p>
+  <h1>Review 360 Inspector</h1>
+  <p class="lead">A helper that opens beside a Storyline course in Chrome. It shows you the alt text on every image and button, the closed captions, and the notes for the slide on screen, and lets you copy them, jump to any slide, and check knowledge checks.</p>
+  <p>You only need the course open in Chrome, from a Review 360 link or a published course. The publisher keeps the project file; this tool only reads the course already on your screen, and <strong>it never changes the published course</strong>.</p>
+
+  <div class="window" style="margin:18px 0 6px">
+    <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">360.articulate.com/review/…</div><span class="tool"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAB+uSURBVHhe7Z37dxzlecd1Tk9T0ja/tPmhoc0fUNoeShOwjS6r295nb9qr7lcbDKEhONgBE0wC5pJAC6FJCA3lEoNtbONcaHrIhZZAMMa27tfVSqu9SFpJu5IlS7axgafneWdnd/ad2Z2Z1a60K/Oc8z0z9kmwVp/vd2be533n3ZKSHNddd336ubadqzd17FzZ3dG5/Gxre+x3be2LQ61tUX9beyzS2haLtrZFoy2cWhdE1dzCaT6p5qSaiOaiTU1x8c+bIsljYyTamKJZ9tgwm6KGhploQz1qNn5MVb1nOtrgmSbHFLlZedzhaL07TI5ErlS5XaGoxxWKuh1iCrCyB6IuRzDicgT8LntwyGUP/M7tmHnW5ZjZ7XJN34S/W/r3XRB1xx1zf9HVtWLu6Fp5saPrgq+j6wLcthuIdt12Fbp2XoLOrjXo6FqFjs4Lca0QtXfQWob29mVoa08eWZ1n1caqlVMrHpegtTWplha+Flk1J9WcUAyam2hFoQnVKKIG1AI00qqfT1EDysNpLlXuOahPKMLKxWmWPbrnocG9AI2eJWiuX4Gm+hVwO6ZRPrc9/JLbPm02mUb+kuaw4dXRsfalzp1rBzq6Lkztuv1juH03QNeui9DegbBiArW2R6G1jVJrXG1RaGldSFULp3miZk7NfM2xapqDJlqNEWhqirDHxllobIxAY0MEGsn5LDQ2cJqBhoZZaMBjPSUPq3rPtFBuVJjIw5eLUyght5NWENyOpFwJBcBlp1SHxxDUOyPQ5FmGBncM3PbwlNs+fcBsDnyJ5pL3Ypizn+/sXPl216616O47EfolaO9YhDaUCHgWfkwcPjmnwKcYIEv4CF4W/FlorFcAH6HnAj7PABnh2wPgrENNpchDzIBXhtkFR13w28iE5pSXautc1nftuthPwO9cg7aOGAuewBc3QOEmn5UAfDr4m5B8JzFAKnwiG8oPbvsMawT7TL/DNmWgeeWsysvf/pP2nRee2HX7FcDLfSLxxZx8JfALJPl8+A5O1kmody6AxzkPDmvge8iK5reuamkJXt+xc/WdO74G0NGFD2qxVAMUa/LlXvYLMPkJ+DwTOG1BaHSvgNMWesdhGLue5phVtbTM3tC1c82Ll/z2zkUCPhW+EHxRJF8s/WLwCzn5CficJokaXOfBaQuP24zD/0DzVFTt7TN/37Xr4uxtuz+Ftk429Z8lPwv4eU1+Kny7BTUB9Y4YOOvCEbtp6Aaaq6xqaYle37HzwgSBj5f8ePqLP/ki8OMGEEDPBfwNTD4LP2kCjyMKDmtw0mIZ/zuab8Z60AF/2t659OHtdwILf6smH1NPjiKpzwX8DU9+qgHsZh/UOxfBbp48q9V65XcR2zqiz+IDH0n9Vk1+Aj5lgKJPfhw+MQBrggbnMtiYsR/SnEWrrXORuW33J9DRtXwNJD9N+tcLf7OTzzNAHZrA4gePfQFs5nETzTuldu6c/nx75/kJHOsLh3pC8EWdfPrSv+WSz8InMvnAVRfB4yTDTKfvGLZ1LD1EhntbPfn109dE8pPyERPUO5bAyox/h+ZOateulb9u7zy/1Enau1s5+SLwCfR1wi/E5HPw4wZwWEJQZ5o8b9d6v0jzL2nvXLwf078levtK4F8DyU9qHDz2RbAZfQ+kwLffHbyutSMWxFm9ayr5uYBfBMnnZDP5wGkNg9XoDafMHrZ2xAy7cIKnc+mz5CuBXzTJ94GNYQ2ActnmwGryGvkGOHTbHXj5Fwe/5ZJPwCfhpxhALvwiSz4RM07krlsAm3H8VQIfh35t7dGZzl0Xr43kJ+CLpF8u/GJMfhw+ymEOgtUwNqtW9/55SWtrdFtn1yq0dywJwG/d5MfhI2yl8Is4+Un5wG4OgJUZLS1pb4/ejWv5yNO/AP46k988D576OXA4ImCzRcBiRc2CxZKU2czXTFImViaiaVZMqhgmDIxRTCFgDCEwpigIRj1POvZo0AVSpeWOU6DnpKHlJzJo/cDop8Bmnoqv2yvs5CdkxNtAFCyGsT0lbR2Lz+HqXSH87JOP4O2OOaI771yAg48uwQsvrMCxY6tw4kQmXYATx1kdl6NjK2l1jNbrnJYl9frRZTh2lD0mdT5FR147Dz95LgYPHZiDro4QMHo/GHV+AphNfx7grzv5rKxGL7hsC2AxeH9Sguv2d932cW6S3zoPbvccOF1zcPDgEpz64DKsrn4CW70uXPgE/vjeGhx4IAImgx/MRj+47DmGn4vkx+GjnHgFNo79HkcAg107L68/+a3zYLfPwe47onD69GX6d3TN1Kn316CjNQh6zSS4cgU/h8nnZDeHwGL0DpW0tUcnSft3ncm32eZg//5FiEY/pn8n11xFF67CvffMgK52Im6AdcDPcfITBjAFwKIf85e0tkUjHZ2r607+/fsXYXX1U/p3cc0W3vr23D0Neg2aIEv4eUg+pzpmCh8CI2iAKL6qJQpfKvkteM+fh9tvX4DFxa1/r1dasehVaGsOgMkwqRx+npJvNbCqY/x4BYjFDbAihC+VfN7T/rV8z5eqU++vgkEzAfYEeBnw85h8gQHwDd0UA8hMPgrhP/roEv2ZPyuqDjwwC3qNTx78PCef1RjYEgZoXYi2cwaQmXyuw4f3/jNnPku/VH1wag30ah8BnRH+BiQf4VvQAEbaAAqSj/Cxw7f7jgW4eFHeg18weBXefHOVNHDeOJEqbADxzwU6vhI/X2HPKR3nn3PNoOPL8XM8ptHrySPbBDqfXkeTOnpkCX5xchmmpj6iP6ZoXVz7BNpbAmA2Iug08Dco+Qg/YQDdaNwAHdwtQCT1Isln0x+Bxx6Xd/l/6601cLlm2RauRHvXJGjvhjK0d0Ng1KOS7V0Dtnf12M7ltXkT7d1Asr0raPP6QYdS05oEXS0rLaeaCdBUT4CV8cOv31yhP65ofefB2cRVQAB/A5OfNMCk0ADi4IXw8eHPaovAiy9Kf3i//yqB73TGJ3aI8jSxQyZ3cCKHN7HjjE/uiE3srHNWz4K/RGYSJiekrwTPPxcFTfW4EP4GJ59IL2IAAfw0yedm9HBiB3v7UvWrX66CiZnZoFk9Cj4nMfiiBhCBn3FWzw/qKh+cPHGe/tiCOvzqIqirOANsXvIRPmcAc1oDZEh+wgCWWTKBI1V478ZLPgGdL/jrSD4LPyAOP03y+e1dTY0PjrwmfSt8/cgiqCvRAJubfFajPAO0LETbOpZFDJAePs7lyzXAG2/EDZAv+EqTLxd+xuQn27uaah8cPazQAJuYfISPshriBsCduHATJrnJ5xZzyDYAuQJM5wf+upOf5rIvI/lcZ0+2AQ6jAbybnvwUA2hFDSANH1fyKDZAruGvN/n2NPBlJl+xAY4sQi0aQAz+BiYfZSYGmACzdgQNMM8aQAF8XLqFK3hkG4BJNcC64eci+WgAGr6C5Cs2wGHWAAL4G5x8s46ViAHkw1+PAdYNPxfJF4OvMPncxI6mSp4BjqIBVHwDbE7yxQ3Qdl4R/KQBLtCfU1BkFMCEcwO/gJLPTezgMBDhSlWqATYv+QkD6DkDNLMGUAKfNcCMIgOsG35eks+u3yMGoMHLgI99fRzbH1FkgM1NPqsRsOp9IgaQCR+XbCsxAK7eXRf8vCQ/uZJXAF4mfM4AR19TYIBNTj7C5wxg0sQNgHvuyoYfX7dPDHBcpgGMPAMohZ/X5IuAVwAfu3pKrgA1qrFNTz6RdgQsnAFw1+1UA2SAz3tjB9fsKzaAUvj5Sn78XABeIfyEAWReAWoqkgbYrOQjfMoAczwDZIBPvbGDBsCpXalKGEAp/HwmP0fwiQEqlRtgM5OPMqUYoGkuiluuZ4Qv8q4etncVGUAJ/A1PPvtCh1L4qFqFBtjs5CN8YgAdGmCYM8BSevhp3tXD7p4sAxxfIXP5suFvZPIRepbJ52b1sLkjywCvxVgDKIGfh+QTaYZZA6j5BhCAF08+N6Wr2ABy4G9k8nMAX5EBDqMBRgXQ08LPU/IRPmuA8VQDCOCnST43q4fdPdkGMISk4W908hPCy3928LGvL9sA5AogbgAB/DwmX54BMiSfm9VTYgBcupUR/mYkn5yvAz5nAJUCA5QLDZAevEz4CpPPyZw0QCSK360jN/lcTx+7e4oNIAZ/M5JPX/oRuBL4vPl8JQaopgwggL8ByU8YQDsOjMAAMpKftQHE4BdK8hPgZcCn5vOzNUB68DLhZ5n8VAMM8Q0gHz4K27vyDRAUwt+05K8DvshKnlrVGBx5LUZ/bEGxBhgRh7+ByUcxnAFq0QCNaIBFRfBxYgfH9rjuXqqIAfScAQos+Uou+3ED4DjepPOBrnYcNNVeuPmfh+Hl/4rSH1tQnAHSg5cJf53JR/iMekjEAArgY1NHuQEKLPk2BC4Pvo2ZAL16nCzpMht80NU+BfftDcP3H5+FHzw9B73da/THFhReJarLMhlABnyBAbKDzxrAyxoAv0WTNYB8+EoMgG/tEAMUUvJlXvatxglQVyEoH+zdE4Y3ji+Bd+wyXLqk/E3oQ69E4eYbB8GkHdvU5IsboHlREfxsDFDIyacNYDNNgKZqHJy2CXj26XkCfb01Hf4Inn4Kd+z2Qk35CJj1Y/LhCwywPvjEAJqEAWZZAyiAjxM72N2TZYBjK+Q1LQH8Akk+Hz6eM1ofGDTj8L3HIhAKSr/xo7SCgY/giYMzoK0aAV31SKoBxODnOPmcTHwD4PfoKoHPXgGUGCBQ4MnHe/0keXWrvXkKTn8gvdZxvXX61AVo9vigpmyYMkB+k09UyxlgMFaC35yNX6KsBD5O7GB7V54BlnkGKMzko3A8f/++aYhGr9IfIW+Fewnt2xOEyh1DQvh5Sj7CZ2oHwaQZA0OKAQTwqe/V80ynnGNzB/ffk6qkARQmP1fw6eRz7+jzDID9/McPRuDKFXmvuuey8N989LthqLx1iIDmkm+RgJ80gTh8cqThxw1g5AxQwxmgiWeAdF+kzF0B4j19xQaQnXx8VSvNSxu4hk9iAWcCfkrq0ycfh3bffyJC/9gbXo8fnAbVdrwScMDj8BEynXxNKnwW+BD29kWTb1QPpsBPMUADZQABdBH4ig2gjV8BxOBTBsgMXwR8lvDxHO/5+/dNw8cfb3zy6bp69VP41p4AVJVyJmCNIA/+cBI+ZQAx+MaaQTCpaQPITD43qaPYAGLwlSSfvuyvAz6K0fmgyeMnO3llU7HYx9Dbexl+85s1OPnGCtFbb61Cb8+lrPdKXIxdhQaHFzSVOFsnF76y5CN8Y80AzwD1M8QAAujp4HMG0AdlGQC3XsGdOATwNyn5KOzhY/r/8H/Scxn8+uQTgPfeuwgHH4lBW+ss2KxhMDHxnUv0QWAMAbCYgtDcGILvPjQHf3hnlfx/lNTpDy5AbfkQMBo58JUn31g7QI6MLAPQ8LGfzzPA0SPL9M8vqF/+YgV0GjQAQt/85OOQT1s9Do8dnKV/1Iw1OPgR7Nu3AGbTNFjMYXA5p8ETn99IbDfvDJHPYrcFyMbRuO3MnrtnoK/vEv2fy1iPPRyGyh2DEvCzSz6eGxK3gAHWAE1NUWn4nAHiH5oxBOGFn0rvjBEIXAG7NQg2c2DTk0/au8wEWZc3Hb5C/6hp6+TJVXDYZ8BqTY6EuN8HHz5+Nnb0kjSuQTsJjH4Sjh2Vfn+Qq9mZj8CiHwFDzXByuJej5CN8NAJTOwaGas4AjZQBaPi85JNJHXcYzEwQDj4iPQuG9T+/vgA2S4DddIm3337qpkyTRLgJU8qGTLUTZFMmThruWO0TqspH3tXDNi6u1yeq5MsL278yCk99b47+EdPWK6+sAMNMg9udfEZifxepyeeMzYfPyg82E7t6+IX/lPf7wnr6yRlQbR8AM4LPYfLJOTHAaBoD0PCp5HOy20Kwa+cMXLok7wl6auoK/PzkMhw5nLrv/utH0gu3YxPosJQWifBtHVyoQetnL8dgdkZe+jH5jHEaPB4avnTyUcmrEzu/UF3hJfsEyKkJ3yVyBTDW5jb5KEPcAHqBAWj4IsnnnO92hchV4MyHF+mffUvU0NBHYK+bAbd7Jrvk8+CTB0/LBFgM46Cv9UJ/n7zf2Te/7oeaMhyz5y75CD/FAPWeuAFo+GmSn/jwrhCYjEF4+Dvz9M9d9IXduXvvXQCbFfc1WF/yuVEH90awtnoM7todkNV1PPF6FFTbBnKafKLqfr4BpuMGkJf85KROmDzVm5kAnD0jz9HFUu++e5Gsek594Msy+Tz4NhO7HhAXhvzv76VHUN7Ri6CrQrA4LMxN8hG+oTp+BahKGGBBUfL5s3pWcxB2dk7D0lJ2zY9CrEcejoHFwhogV8nnLwZVq0Zg/94Q/c8KCp+vWuu9oFENCgyQFr5E8hE+Ho01aIC+uAEa4gaQmfyUWT0XfmFSAL61LwJrawq7HgVY2OFrbZkl4/ycJZ+/EtjgBUYzCg6zl8wGStXeb/ihunRAHnwZyUfpq/qBqRlJGqCRb4C08FOTz+/t47lBNwX3fjMC8/PSH6qQq6f3EunwsU2e3CafWwGEq4HUqmE4+6H0uoMnHw9D5fZ+afgyk4/w2StAWgOIwRdJfkprl/2zUT8FnW1heO9d6UWShVq/eQu3tsX3GHKffLL6Rz9GJnqqbh2E//6l9JDw+R/NQsUtrAHSwleQfPbPfAO44wZICz998gW9fWcQrCb8ipQpePCBCLzzzmrRPRucPMm+x0DDz0XyCfz4TB82eY68ukD/84L62YtzUH5zf3r4CpPPnaMBdKwBwnEDiMGXTj7d2sXevtOOEyNTpB/e1hyChx6MwPPPxUijht57n9USvH50iRzJ+ZG4+OcpWowreY7NH9yLD8U1g/h65aUo9PVKj1beeCO+iDXxWXOX/MRcv3aEGODwIbkG6BOHn0Xy8ZwYoHoEdJV9sRIPGqA+aYCskp+ht19nmSLfqklav1LtXbEWr1h7N6XF6yUretQqL1nWldQYEb6Tj/rqjcPwox9I9yzwFoCzetzny3XyyQSPZhgqtw/Am7+QcQv4cQQqbukTws8y+WkMMJ+T5NPwE8rTrF76V7ZSd+JCqSvHyLJsqerpvgQWhgWfj+TjxA6jHiZP9mdOS09HP/V4GFTb+nKWfKJKNMAw6Cp7kwbIdfJT4NPQ8wIf99+bEIAnYnygqx6D++4N079fQeEwsKkhRKZ0afjrTn48/frqIbAahmFhXnpOYu/dk1C1oz9nyUf4+so+EQNs0eQTOCYfMFovdDT74dJF6V4FfiE0Pr/kOvlsS3cIKnf0w757/PQ/Kyh8A6nZPQqaChZ6LpKP8HUpBnCFow3EAFsz+eyOXONkIgZNMDYqvTgDV/Lg1HSuk8+N5fGh7u3fSq8PGBu5CBoVQs1d8hE+Hg1CA2zN5HOAULhDx4lj0g9euEATV/LgYo5cJh/hY/p3d47DVRmTQccOLxCz5DL5eNRX9oKhahh0Ks4AHu4KkAF+kSafbwCcidt7T5D+PYvW4MAlspLHakr+PHLgZ0q+rnIAqm/th74e6Q4g1j1fm4CqHWgAKfjyk4/w8RwNoE0aYG5LJ5+TRe8Fk84Lkz55L3ueOLZEVvLgYg6cz5eCnyn5CPDWf+mFo69KD0WxJn2XiGH0VQg7E3xlydep2D8bqoZAq+pBA4RYA6SDvwWSnxT7Zu6/f1/+gtAXno9CTYUXLEZ2l+908DMmv2qAwP/xszP0fz5tPfNkGMq+2pt8+BOFrzz5rPAWEDeA2xE3gBj8LZJ8IgRmxCsA+36+3GVhWLiUDFfy4C1EDH6m5OMQDi/7P3tJ/jrEucgVMGsGQavClm06+NklH+HrVCIGEMDfSsmPw+eEVwF8RVtJ9ZxbgztvmyLbvOB8PqNhZ/VSk4+px3H+IAGPD3C72rxw9ox0w4erj69+Cg8/GIDymzH96eBnn3yETwxQOQTaCs4Abr4Btmby+cLUognefUf6xRZ+4ejgt2+dh/v3hsBhwfbzMFTdOgSq7YOkt4/t3ZrSAbAZh8k8/lu/XpS19Itf55eugtM8TLp/DBn60fDXl3yUljZAfcIAWzv5/Eu3vmYU6h3jshZliNX8/BUyn4/9/COHFuDwoXn41c8XSXt3fk7+7UWsRobXoM44BJXb2SEgBz4XyUf4uope0AsNsPWTz8JnDYCqLhuGvfcESLILrcZGL4LNgCZgbwW5Sj7Cx3PKABGBATLCp6HnBX5+ks+JPLwZxsh7+U8cnKZ//wVRrAkGiQk48LLgZ0g+OSdXgEHQVHSjAQKsAa6h5HPwueEbmgDfzy+E18TpIibQD0Lltl4wogGk4EskH+FrK3rSGyAjfBp6XuBvTPLZ4VvcBGSFziDcd29gQ7eIkVusCQZAta0neQUQgy8j+QifGEDFGcAeiNa70ADXVvKTYrdjwSNuztDkGodTf1Q2OsimVpaVLZUbG11jTXBLD3sVoOHLTL7AAC5igNnM8GnoeYG/0cmPb8iEY/h4Iwf/jJszqCuG4PFHwhAK5X6buHDoMnz3gQA4TMMk2UpqbGQNrDrWBPqq7JKvLWePOjRAORrAEYjgFSAt/C2Z/My7ceHmDPh+vs04Cj/4txkYH5OeQpYq79hFeObJabDocDq4Fyq39UGdYWgdJugGQ9wEsuETdYOGuwKUn5srcdoDfhwGisKnoecF/iYlX9QAqduy4Nu52ODBN3T3/KufvKuHb+1eviy9qAT/NxPjl+DE0QUyq4eTOgheq2KbO9jkwXE+DvWyM0E/VNzcHTeADPjx5CN8PNerhvEK4C9x2YODDe4FIfwtnnwBfGzlptmTBw2Ab+myZhiC9sZxuO+bU/DMU9Pw0k/n4NWX5+HQy/Pw0k8j5O/u2+OHtoYxfPmStINxShcNQE/s4BGHeDjUy8YEFk0/VO3oSRggLXxe8okRyrtBrxoBdVn3MD4D/K7Rs3htJV/ksp8OPr0zh7FmiLyrh4s6Vdv7yUsbCJnolj7SwsV5AHU5O5UrtZInYQK9chOcfn8ZqrZ3g7Y8A3wq+QhfU94NBlxJXXbu7RKHfeq5pvqVayf5IvDpTRjF4ef2/Xx+bx/PcZzPmkDZW1X3fn0cyr96Thy+SPIRvqasG5iqSVCXn/tJidPuv7u5/kLcACLgcw6/sJIvD37u38+ne/vY5MFxPj7gKTHBC8/NwI4bzwrhp0k+wscjGkBT2n1PicsW2uZxzpJtWQXgcw6/gJKP0GXBz1/y6d4+HnGIp8QELz4/A9tvPCs7+eRY3gO6CjIM3FGyk5n+vKNucsbjjOQZfgElXzb8/Cef7u1jkydhghFpE+z9ug/Kv3JOdvI15Xi7GAR16Zlp+7b3ryvBctgmDzXVL+cRfoEln6f08Dcu+XRvH5s8OM63avszmuDDU8tQtY1NtLzk4/k5MFZO4APgIQKfNcCUocEdAye3EXNO4Rdu8hMGEMDf+OTTvX1s8qAJLNp++OMfhPsxvv/ueTCr+4gBdDKTT87LusGg8oJ2xxlDwgB2e/A6h3UyRG4DOYVfuMlPTX9hJJ/u7eN51Y5uqN7RDfu+4SP3exSe4/Cvats50KnkJr8bUw+6iiFQl54N3XTT2c8nDECuAnVT+5s8F3II/7PkZ5N8QW+/shc05b1kqIdP+yi857MPcvKTrybpPwdGHP6VntufAh+ryRL+K2ddYNHtmMkB/CJIPg8+q8JJfja9fXH4XPJZ+LryAdCU9ixpS7u/SPMnZbdMHMCrgNAASuAXQ/KT268mVGjJl4KvMPkopsqP6T9Ac08UGRJa/RMe53wcuFL4xZB8CnxcNPiM8Iss+Sh9xSjCn2Toez9dDvO4qcEVA6ctoBB+kSQ/HfwtnHxNWQ8YVONQc+sZM81btOxm3380ui8ogP9Z8gs1+erSc8BUTkHNjg9/SHNOW1qt93MO69TpBtdSHHYm+MWbfLGHvrTwizD56tKzYKicwL8/U17+9p/RnDOWwxG83mkLTtY7oqngt0jySfq3dPLPkoaPpqxvUnfLB39L85VVdtPQDQ5raM6DJjD7EuCLPvlK4Bdr8rHbVz4wV1V6+gaaq6Ky6Ef+0WENTdQ7F7ds8hOi4Rdl8rHX7wNNWf9k9bZT/0TzzKoYZvDLDmvodINzGewWf1rwxZj8tPCLLfml7NM+jvU1Zf2na0vf/TLNcV21zf7+dXZz4BlXXQTcdXNC+EWd/Dj4Ik6+XjVKxvra8r5ntnHTvPkou2nC6LCG++odS+CwhKDONF6cyccvYRCDXzTJZ8Fjexf7+9qygX516TmG5pWXwoUEdWb//XZLcN5jXyRGSJt+GnwhJD8Bvxjv+awBcFYPl3Vpy/sX1KU9+/Oa+nRl0w7/jd0UOGA3+4Mu2xy46xbAYQ6CDa8IGeFvcvITKp7k498hdFzMYagcx/t8UFve91Dtre99ieay4aXTeb9Qx0zV1ZknX7WZ/H67eQrctgVw2RbAaY2AwzINdnMI6pgpqGP8CdmMfrAxk2Az8jUBNgMrq2ESrOQ4AVY9ysc7+sCC0nEaT5V2HMxEXlYaofAbtPEbNDnh16kmzmtHBcIt1pm48Dyhala4+SLuwInCbdiSGiLS47GSFb6fj2/o4hs6nPB1Lb1qCAyqYTBUjoKxcpykHC/xuooBnBae0pT3v6or67Prbv7gCzSHgii7/dPrbCb/NjszdZeNmfh3i9H7K6vRe8ZiGPNa9WOzVr03ZtGPJaXjNJqQGaUdiZm13JEnzUjMpBmOmciROx+OmdSpYlC1Q2k0SITfnStQ9UBC+K1aCVWh+lKE++3jjtusepNSscJ9+HAjpoQqeEei7hi+oJlUT0xT3j2rLuv2ast7zmjKzr2pK+97WlvWf5e6bOgWyYmcLOr/AbeFhD6UKN40AAAAAElFTkSuQmCC" alt=""></span></div>
+    <div class="hero">
+      <div class="course">
+        <div class="bar"></div>
+        <div class="t">Target audience</div>
+        <div class="pic"><svg><use href="#i-people"/></svg></div>
+        <div class="ctl"><i></i><i style="flex:.3"></i><i style="flex:.3"></i></div>
+      </div>
+      <div class="side">
+        <div class="pm">
+          <div class="pm-head">
+            <div class="pm-brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM2MzY2RjEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNDMzOENBIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cmVjdCB4PSIyMCIgeT0iMjgiIHdpZHRoPSI2NiIgaGVpZ2h0PSI0OCIgcng9IjgiLz4KICAgIDxjaXJjbGUgY3g9IjgyIiBjeT0iODAiIHI9IjE4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgICA8cGF0aCBkPSJNOTUgOTNsMTMgMTMiLz4KICA8L2c+Cjwvc3ZnPgo=" alt=""><div class="pm-title"><div class="pm-name">Review 360 Inspector</div></div></div>
+          </div>
+          <div class="pm-tabs">
+            <div class="pm-tab"><svg><use href="#i-presentation"/></svg>Slides</div>
+            <div class="pm-tab"><svg><use href="#i-check-c"/></svg>Check</div>
+            <div class="pm-tab on"><svg><use href="#i-image"/></svg>Alt text</div>
+            <div class="pm-tab"><svg><use href="#i-captions"/></svg>Captions</div>
+            <div class="pm-tab"><svg><use href="#i-notes"/></svg>Notes</div>
+          </div>
+          <div class="pm-body">
+            <div class="pm-card"><div class="pm-type">Image</div><div class="pm-alt">Three people representing the target audience</div><span class="badge written"><svg><use href="#i-ok"/></svg>Written alt text</span></div>
+            <div class="pm-card"><div class="pm-type">Image</div><div class="pm-alt">Picture 3.png</div><span class="badge warn"><svg><use href="#i-warn"/></svg>Default name</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="muted" style="font-size:12.5px">The course on the left, the inspector open in Chrome's side panel on the right.</p>
+
+  <p class="eyebrow" style="margin-top:18px">Five tabs</p>
+  <div class="glance">
+    <div><svg><use href="#i-presentation"/></svg><b>Slides</b>Jump to any slide, or let the course play itself.</div>
+    <div><svg><use href="#i-check-c"/></svg><b>Knowledge check</b>See the answer and reset a question.</div>
+    <div><svg><use href="#i-image"/></svg><b>Alt text</b>Check images and buttons.</div>
+    <div><svg><use href="#i-captions"/></svg><b>Captions</b>Read and copy closed captions.</div>
+    <div><svg><use href="#i-notes"/></svg><b>Notes</b>Read and copy slide notes.</div>
+  </div>
+
+  <div class="callout">
+    <strong>What you need</strong>
+    <ul class="plain">
+      <li>Google Chrome</li>
+      <li>The zip file <b>Review 360 Inspector.zip</b></li>
+      <li>The Review 360 link, or the published course, you are reviewing</li>
+    </ul>
+    Install it once (Part 1). After that, start at Part 2 each time you review a course.
+  </div>
+</section>
+
+<!-- ============ 2. Install ============ -->
+<section class="page">
+  <p class="eyebrow">Part 1 · Once per computer</p>
+  <h2>Put the tool in Chrome</h2>
+  <div class="rule"></div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">1</span>Unzip the file</h3>
+      <p>Find <b>Review 360 Inspector.zip</b> in your Downloads. Right-click it, choose <b>Extract All</b>, then click <b>Extract</b>.</p>
+      <p>You get a folder named <b>Review 360 Inspector</b> with the tool's files and this guide inside. Move it somewhere it can stay, such as <b>Documents</b>. Chrome runs the tool from this folder, so don't delete it.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">Downloads</div></div>
+      <div class="screen">
+        <div class="row" style="align-items:flex-start">
+          <div class="file sel" style="flex:1"><svg style="color:#6b6b6b"><use href="#i-zip"/></svg>Review 360 Inspector.zip</div>
+          <div class="menu"><span>Open</span><span class="hot">Extract All…</span><span>Share</span></div>
+        </div>
+        <div style="margin-top:8px"><span class="label">Right-click, then Extract All</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">2</span>Open Chrome's extensions page</h3>
+      <p>In Chrome, click the address bar, type <code>chrome://extensions</code> and press <kbd>Enter</kbd>.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr hot">chrome://extensions</div></div>
+      <div class="screen"><span class="label">Type this, then press Enter</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">3</span>Turn on Developer mode</h3>
+      <p>At the top right of the Extensions page, click the <b>Developer mode</b> switch so it turns on.</p>
+      <p class="muted">Chrome may warn you about developer-mode extensions. That is normal for an in-house tool like this. Leave Developer mode on.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">chrome://extensions</div></div>
+      <div class="screen">
+        <div class="row" style="justify-content:space-between">
+          <b style="font-size:15px">Extensions</b>
+          <span class="row" style="gap:8px;font-size:13px">Developer mode <span class="toggle hot"></span></span>
+        </div>
+        <div style="text-align:right;margin-top:8px"><span class="label">Turn this on</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">4</span>Load the folder</h3>
+      <p>Click <b>Load unpacked</b>. In the window that opens, click the <b>Review 360 Inspector</b> folder once, then click <b>Select Folder</b>.</p>
+      <p>Pick the folder itself. Don't open it and pick a file inside. The right folder has a file named <b>manifest.json</b> directly inside it.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">chrome://extensions</div></div>
+      <div class="screen">
+        <div class="row"><span class="ui-btn hot">Load unpacked</span><span class="ui-btn">Pack extension</span><span class="ui-btn">Update</span></div>
+        <div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px">
+          <div class="file"><svg><use href="#i-folder"/></svg>Local Storyline Inspector</div>
+          <div class="file sel"><svg><use href="#i-folder"/></svg>Review 360 Inspector</div>
+          <div class="row" style="justify-content:flex-end;margin-top:6px"><span class="ui-btn blue hot">Select Folder</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ 3. Check + pin ============ -->
+<section class="page">
+  <p class="eyebrow">Part 1, continued</p>
+  <h2>Check it, then pin it</h2>
+  <div class="rule"></div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">5</span>Check that it's there</h3>
+      <p>A card named <b>Review 360 Inspector</b> appears, with its icon and its switch on.</p>
+      <p class="muted">Already have the older Local Storyline Inspector? You can keep both. This one is the one with the indigo icon.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">chrome://extensions</div></div>
+      <div class="screen">
+        <div class="ext-card"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAB+uSURBVHhe7Z37dxzlecd1Tk9T0ja/tPmhoc0fUNoeShOwjS6r295nb9qr7lcbDKEhONgBE0wC5pJAC6FJCA3lEoNtbONcaHrIhZZAMMa27tfVSqu9SFpJu5IlS7axgafneWdnd/ad2Z2Z1a60K/Oc8z0z9kmwVp/vd2be533n3ZKSHNddd336ubadqzd17FzZ3dG5/Gxre+x3be2LQ61tUX9beyzS2haLtrZFoy2cWhdE1dzCaT6p5qSaiOaiTU1x8c+bIsljYyTamKJZ9tgwm6KGhploQz1qNn5MVb1nOtrgmSbHFLlZedzhaL07TI5ErlS5XaGoxxWKuh1iCrCyB6IuRzDicgT8LntwyGUP/M7tmHnW5ZjZ7XJN34S/W/r3XRB1xx1zf9HVtWLu6Fp5saPrgq+j6wLcthuIdt12Fbp2XoLOrjXo6FqFjs4Lca0QtXfQWob29mVoa08eWZ1n1caqlVMrHpegtTWplha+Flk1J9WcUAyam2hFoQnVKKIG1AI00qqfT1EDysNpLlXuOahPKMLKxWmWPbrnocG9AI2eJWiuX4Gm+hVwO6ZRPrc9/JLbPm02mUb+kuaw4dXRsfalzp1rBzq6Lkztuv1juH03QNeui9DegbBiArW2R6G1jVJrXG1RaGldSFULp3miZk7NfM2xapqDJlqNEWhqirDHxllobIxAY0MEGsn5LDQ2cJqBhoZZaMBjPSUPq3rPtFBuVJjIw5eLUyght5NWENyOpFwJBcBlp1SHxxDUOyPQ5FmGBncM3PbwlNs+fcBsDnyJ5pL3Ypizn+/sXPl216616O47EfolaO9YhDaUCHgWfkwcPjmnwKcYIEv4CF4W/FlorFcAH6HnAj7PABnh2wPgrENNpchDzIBXhtkFR13w28iE5pSXautc1nftuthPwO9cg7aOGAuewBc3QOEmn5UAfDr4m5B8JzFAKnwiG8oPbvsMawT7TL/DNmWgeeWsysvf/pP2nRee2HX7FcDLfSLxxZx8JfALJPl8+A5O1kmody6AxzkPDmvge8iK5reuamkJXt+xc/WdO74G0NGFD2qxVAMUa/LlXvYLMPkJ+DwTOG1BaHSvgNMWesdhGLue5phVtbTM3tC1c82Ll/z2zkUCPhW+EHxRJF8s/WLwCzn5CficJokaXOfBaQuP24zD/0DzVFTt7TN/37Xr4uxtuz+Ftk429Z8lPwv4eU1+Kny7BTUB9Y4YOOvCEbtp6Aaaq6xqaYle37HzwgSBj5f8ePqLP/ki8OMGEEDPBfwNTD4LP2kCjyMKDmtw0mIZ/zuab8Z60AF/2t659OHtdwILf6smH1NPjiKpzwX8DU9+qgHsZh/UOxfBbp48q9V65XcR2zqiz+IDH0n9Vk1+Aj5lgKJPfhw+MQBrggbnMtiYsR/SnEWrrXORuW33J9DRtXwNJD9N+tcLf7OTzzNAHZrA4gePfQFs5nETzTuldu6c/nx75/kJHOsLh3pC8EWdfPrSv+WSz8InMvnAVRfB4yTDTKfvGLZ1LD1EhntbPfn109dE8pPyERPUO5bAyox/h+ZOateulb9u7zy/1Enau1s5+SLwCfR1wi/E5HPw4wZwWEJQZ5o8b9d6v0jzL2nvXLwf078levtK4F8DyU9qHDz2RbAZfQ+kwLffHbyutSMWxFm9ayr5uYBfBMnnZDP5wGkNg9XoDafMHrZ2xAy7cIKnc+mz5CuBXzTJ94GNYQ2ActnmwGryGvkGOHTbHXj5Fwe/5ZJPwCfhpxhALvwiSz4RM07krlsAm3H8VQIfh35t7dGZzl0Xr43kJ+CLpF8u/GJMfhw+ymEOgtUwNqtW9/55SWtrdFtn1yq0dywJwG/d5MfhI2yl8Is4+Un5wG4OgJUZLS1pb4/ejWv5yNO/AP46k988D576OXA4ImCzRcBiRc2CxZKU2czXTFImViaiaVZMqhgmDIxRTCFgDCEwpigIRj1POvZo0AVSpeWOU6DnpKHlJzJo/cDop8Bmnoqv2yvs5CdkxNtAFCyGsT0lbR2Lz+HqXSH87JOP4O2OOaI771yAg48uwQsvrMCxY6tw4kQmXYATx1kdl6NjK2l1jNbrnJYl9frRZTh2lD0mdT5FR147Dz95LgYPHZiDro4QMHo/GHV+AphNfx7grzv5rKxGL7hsC2AxeH9Sguv2d932cW6S3zoPbvccOF1zcPDgEpz64DKsrn4CW70uXPgE/vjeGhx4IAImgx/MRj+47DmGn4vkx+GjnHgFNo79HkcAg107L68/+a3zYLfPwe47onD69GX6d3TN1Kn316CjNQh6zSS4cgU/h8nnZDeHwGL0DpW0tUcnSft3ncm32eZg//5FiEY/pn8n11xFF67CvffMgK52Im6AdcDPcfITBjAFwKIf85e0tkUjHZ2r607+/fsXYXX1U/p3cc0W3vr23D0Neg2aIEv4eUg+pzpmCh8CI2iAKL6qJQpfKvkteM+fh9tvX4DFxa1/r1dasehVaGsOgMkwqRx+npJvNbCqY/x4BYjFDbAihC+VfN7T/rV8z5eqU++vgkEzAfYEeBnw85h8gQHwDd0UA8hMPgrhP/roEv2ZPyuqDjwwC3qNTx78PCef1RjYEgZoXYi2cwaQmXyuw4f3/jNnPku/VH1wag30ah8BnRH+BiQf4VvQAEbaAAqSj/Cxw7f7jgW4eFHeg18weBXefHOVNHDeOJEqbADxzwU6vhI/X2HPKR3nn3PNoOPL8XM8ptHrySPbBDqfXkeTOnpkCX5xchmmpj6iP6ZoXVz7BNpbAmA2Iug08Dco+Qg/YQDdaNwAHdwtQCT1Isln0x+Bxx6Xd/l/6601cLlm2RauRHvXJGjvhjK0d0Ng1KOS7V0Dtnf12M7ltXkT7d1Asr0raPP6QYdS05oEXS0rLaeaCdBUT4CV8cOv31yhP65ofefB2cRVQAB/A5OfNMCk0ADi4IXw8eHPaovAiy9Kf3i//yqB73TGJ3aI8jSxQyZ3cCKHN7HjjE/uiE3srHNWz4K/RGYSJiekrwTPPxcFTfW4EP4GJ59IL2IAAfw0yedm9HBiB3v7UvWrX66CiZnZoFk9Cj4nMfiiBhCBn3FWzw/qKh+cPHGe/tiCOvzqIqirOANsXvIRPmcAc1oDZEh+wgCWWTKBI1V478ZLPgGdL/jrSD4LPyAOP03y+e1dTY0PjrwmfSt8/cgiqCvRAJubfFajPAO0LETbOpZFDJAePs7lyzXAG2/EDZAv+EqTLxd+xuQn27uaah8cPazQAJuYfISPshriBsCduHATJrnJ5xZzyDYAuQJM5wf+upOf5rIvI/lcZ0+2AQ6jAbybnvwUA2hFDSANH1fyKDZAruGvN/n2NPBlJl+xAY4sQi0aQAz+BiYfZSYGmACzdgQNMM8aQAF8XLqFK3hkG4BJNcC64eci+WgAGr6C5Cs2wGHWAAL4G5x8s46ViAHkw1+PAdYNPxfJF4OvMPncxI6mSp4BjqIBVHwDbE7yxQ3Qdl4R/KQBLtCfU1BkFMCEcwO/gJLPTezgMBDhSlWqATYv+QkD6DkDNLMGUAKfNcCMIgOsG35eks+u3yMGoMHLgI99fRzbH1FkgM1NPqsRsOp9IgaQCR+XbCsxAK7eXRf8vCQ/uZJXAF4mfM4AR19TYIBNTj7C5wxg0sQNgHvuyoYfX7dPDHBcpgGMPAMohZ/X5IuAVwAfu3pKrgA1qrFNTz6RdgQsnAFw1+1UA2SAz3tjB9fsKzaAUvj5Sn78XABeIfyEAWReAWoqkgbYrOQjfMoAczwDZIBPvbGDBsCpXalKGEAp/HwmP0fwiQEqlRtgM5OPMqUYoGkuiluuZ4Qv8q4etncVGUAJ/A1PPvtCh1L4qFqFBtjs5CN8YgAdGmCYM8BSevhp3tXD7p4sAxxfIXP5suFvZPIRepbJ52b1sLkjywCvxVgDKIGfh+QTaYZZA6j5BhCAF08+N6Wr2ABy4G9k8nMAX5EBDqMBRgXQ08LPU/IRPmuA8VQDCOCnST43q4fdPdkGMISk4W908hPCy3928LGvL9sA5AogbgAB/DwmX54BMiSfm9VTYgBcupUR/mYkn5yvAz5nAJUCA5QLDZAevEz4CpPPyZw0QCSK360jN/lcTx+7e4oNIAZ/M5JPX/oRuBL4vPl8JQaopgwggL8ByU8YQDsOjMAAMpKftQHE4BdK8hPgZcCn5vOzNUB68DLhZ5n8VAMM8Q0gHz4K27vyDRAUwt+05K8DvshKnlrVGBx5LUZ/bEGxBhgRh7+ByUcxnAFq0QCNaIBFRfBxYgfH9rjuXqqIAfScAQos+Uou+3ED4DjepPOBrnYcNNVeuPmfh+Hl/4rSH1tQnAHSg5cJf53JR/iMekjEAArgY1NHuQEKLPk2BC4Pvo2ZAL16nCzpMht80NU+BfftDcP3H5+FHzw9B73da/THFhReJarLMhlABnyBAbKDzxrAyxoAv0WTNYB8+EoMgG/tEAMUUvJlXvatxglQVyEoH+zdE4Y3ji+Bd+wyXLqk/E3oQ69E4eYbB8GkHdvU5IsboHlREfxsDFDIyacNYDNNgKZqHJy2CXj26XkCfb01Hf4Inn4Kd+z2Qk35CJj1Y/LhCwywPvjEAJqEAWZZAyiAjxM72N2TZYBjK+Q1LQH8Akk+Hz6eM1ofGDTj8L3HIhAKSr/xo7SCgY/giYMzoK0aAV31SKoBxODnOPmcTHwD4PfoKoHPXgGUGCBQ4MnHe/0keXWrvXkKTn8gvdZxvXX61AVo9vigpmyYMkB+k09UyxlgMFaC35yNX6KsBD5O7GB7V54BlnkGKMzko3A8f/++aYhGr9IfIW+Fewnt2xOEyh1DQvh5Sj7CZ2oHwaQZA0OKAQTwqe/V80ynnGNzB/ffk6qkARQmP1fw6eRz7+jzDID9/McPRuDKFXmvuuey8N989LthqLx1iIDmkm+RgJ80gTh8cqThxw1g5AxQwxmgiWeAdF+kzF0B4j19xQaQnXx8VSvNSxu4hk9iAWcCfkrq0ycfh3bffyJC/9gbXo8fnAbVdrwScMDj8BEynXxNKnwW+BD29kWTb1QPpsBPMUADZQABdBH4ig2gjV8BxOBTBsgMXwR8lvDxHO/5+/dNw8cfb3zy6bp69VP41p4AVJVyJmCNIA/+cBI+ZQAx+MaaQTCpaQPITD43qaPYAGLwlSSfvuyvAz6K0fmgyeMnO3llU7HYx9Dbexl+85s1OPnGCtFbb61Cb8+lrPdKXIxdhQaHFzSVOFsnF76y5CN8Y80AzwD1M8QAAujp4HMG0AdlGQC3XsGdOATwNyn5KOzhY/r/8H/Scxn8+uQTgPfeuwgHH4lBW+ss2KxhMDHxnUv0QWAMAbCYgtDcGILvPjQHf3hnlfx/lNTpDy5AbfkQMBo58JUn31g7QI6MLAPQ8LGfzzPA0SPL9M8vqF/+YgV0GjQAQt/85OOQT1s9Do8dnKV/1Iw1OPgR7Nu3AGbTNFjMYXA5p8ETn99IbDfvDJHPYrcFyMbRuO3MnrtnoK/vEv2fy1iPPRyGyh2DEvCzSz6eGxK3gAHWAE1NUWn4nAHiH5oxBOGFn0rvjBEIXAG7NQg2c2DTk0/au8wEWZc3Hb5C/6hp6+TJVXDYZ8BqTY6EuN8HHz5+Nnb0kjSuQTsJjH4Sjh2Vfn+Qq9mZj8CiHwFDzXByuJej5CN8NAJTOwaGas4AjZQBaPi85JNJHXcYzEwQDj4iPQuG9T+/vgA2S4DddIm3337qpkyTRLgJU8qGTLUTZFMmThruWO0TqspH3tXDNi6u1yeq5MsL278yCk99b47+EdPWK6+sAMNMg9udfEZifxepyeeMzYfPyg82E7t6+IX/lPf7wnr6yRlQbR8AM4LPYfLJOTHAaBoD0PCp5HOy20Kwa+cMXLok7wl6auoK/PzkMhw5nLrv/utH0gu3YxPosJQWifBtHVyoQetnL8dgdkZe+jH5jHEaPB4avnTyUcmrEzu/UF3hJfsEyKkJ3yVyBTDW5jb5KEPcAHqBAWj4IsnnnO92hchV4MyHF+mffUvU0NBHYK+bAbd7Jrvk8+CTB0/LBFgM46Cv9UJ/n7zf2Te/7oeaMhyz5y75CD/FAPWeuAFo+GmSn/jwrhCYjEF4+Dvz9M9d9IXduXvvXQCbFfc1WF/yuVEH90awtnoM7todkNV1PPF6FFTbBnKafKLqfr4BpuMGkJf85KROmDzVm5kAnD0jz9HFUu++e5Gsek594Msy+Tz4NhO7HhAXhvzv76VHUN7Ri6CrQrA4LMxN8hG+oTp+BahKGGBBUfL5s3pWcxB2dk7D0lJ2zY9CrEcejoHFwhogV8nnLwZVq0Zg/94Q/c8KCp+vWuu9oFENCgyQFr5E8hE+Ho01aIC+uAEa4gaQmfyUWT0XfmFSAL61LwJrawq7HgVY2OFrbZkl4/ycJZ+/EtjgBUYzCg6zl8wGStXeb/ihunRAHnwZyUfpq/qBqRlJGqCRb4C08FOTz+/t47lBNwX3fjMC8/PSH6qQq6f3EunwsU2e3CafWwGEq4HUqmE4+6H0uoMnHw9D5fZ+afgyk4/w2StAWgOIwRdJfkprl/2zUT8FnW1heO9d6UWShVq/eQu3tsX3GHKffLL6Rz9GJnqqbh2E//6l9JDw+R/NQsUtrAHSwleQfPbPfAO44wZICz998gW9fWcQrCb8ipQpePCBCLzzzmrRPRucPMm+x0DDz0XyCfz4TB82eY68ukD/84L62YtzUH5zf3r4CpPPnaMBdKwBwnEDiMGXTj7d2sXevtOOEyNTpB/e1hyChx6MwPPPxUijht57n9USvH50iRzJ+ZG4+OcpWowreY7NH9yLD8U1g/h65aUo9PVKj1beeCO+iDXxWXOX/MRcv3aEGODwIbkG6BOHn0Xy8ZwYoHoEdJV9sRIPGqA+aYCskp+ht19nmSLfqklav1LtXbEWr1h7N6XF6yUretQqL1nWldQYEb6Tj/rqjcPwox9I9yzwFoCzetzny3XyyQSPZhgqtw/Am7+QcQv4cQQqbukTws8y+WkMMJ+T5NPwE8rTrF76V7ZSd+JCqSvHyLJsqerpvgQWhgWfj+TjxA6jHiZP9mdOS09HP/V4GFTb+nKWfKJKNMAw6Cp7kwbIdfJT4NPQ8wIf99+bEIAnYnygqx6D++4N079fQeEwsKkhRKZ0afjrTn48/frqIbAahmFhXnpOYu/dk1C1oz9nyUf4+so+EQNs0eQTOCYfMFovdDT74dJF6V4FfiE0Pr/kOvlsS3cIKnf0w757/PQ/Kyh8A6nZPQqaChZ6LpKP8HUpBnCFow3EAFsz+eyOXONkIgZNMDYqvTgDV/Lg1HSuk8+N5fGh7u3fSq8PGBu5CBoVQs1d8hE+Hg1CA2zN5HOAULhDx4lj0g9euEATV/LgYo5cJh/hY/p3d47DVRmTQccOLxCz5DL5eNRX9oKhahh0Ks4AHu4KkAF+kSafbwCcidt7T5D+PYvW4MAlspLHakr+PHLgZ0q+rnIAqm/th74e6Q4g1j1fm4CqHWgAKfjyk4/w8RwNoE0aYG5LJ5+TRe8Fk84Lkz55L3ueOLZEVvLgYg6cz5eCnyn5CPDWf+mFo69KD0WxJn2XiGH0VQg7E3xlydep2D8bqoZAq+pBA4RYA6SDvwWSnxT7Zu6/f1/+gtAXno9CTYUXLEZ2l+908DMmv2qAwP/xszP0fz5tPfNkGMq+2pt8+BOFrzz5rPAWEDeA2xE3gBj8LZJ8IgRmxCsA+36+3GVhWLiUDFfy4C1EDH6m5OMQDi/7P3tJ/jrEucgVMGsGQavClm06+NklH+HrVCIGEMDfSsmPw+eEVwF8RVtJ9ZxbgztvmyLbvOB8PqNhZ/VSk4+px3H+IAGPD3C72rxw9ox0w4erj69+Cg8/GIDymzH96eBnn3yETwxQOQTaCs4Abr4Btmby+cLUognefUf6xRZ+4ejgt2+dh/v3hsBhwfbzMFTdOgSq7YOkt4/t3ZrSAbAZh8k8/lu/XpS19Itf55eugtM8TLp/DBn60fDXl3yUljZAfcIAWzv5/Eu3vmYU6h3jshZliNX8/BUyn4/9/COHFuDwoXn41c8XSXt3fk7+7UWsRobXoM44BJXb2SEgBz4XyUf4uope0AsNsPWTz8JnDYCqLhuGvfcESLILrcZGL4LNgCZgbwW5Sj7Cx3PKABGBATLCp6HnBX5+ks+JPLwZxsh7+U8cnKZ//wVRrAkGiQk48LLgZ0g+OSdXgEHQVHSjAQKsAa6h5HPwueEbmgDfzy+E18TpIibQD0Lltl4wogGk4EskH+FrK3rSGyAjfBp6XuBvTPLZ4VvcBGSFziDcd29gQ7eIkVusCQZAta0neQUQgy8j+QifGEDFGcAeiNa70ADXVvKTYrdjwSNuztDkGodTf1Q2OsimVpaVLZUbG11jTXBLD3sVoOHLTL7AAC5igNnM8GnoeYG/0cmPb8iEY/h4Iwf/jJszqCuG4PFHwhAK5X6buHDoMnz3gQA4TMMk2UpqbGQNrDrWBPqq7JKvLWePOjRAORrAEYjgFSAt/C2Z/My7ceHmDPh+vs04Cj/4txkYH5OeQpYq79hFeObJabDocDq4Fyq39UGdYWgdJugGQ9wEsuETdYOGuwKUn5srcdoDfhwGisKnoecF/iYlX9QAqduy4Nu52ODBN3T3/KufvKuHb+1eviy9qAT/NxPjl+DE0QUyq4eTOgheq2KbO9jkwXE+DvWyM0E/VNzcHTeADPjx5CN8PNerhvEK4C9x2YODDe4FIfwtnnwBfGzlptmTBw2Ab+myZhiC9sZxuO+bU/DMU9Pw0k/n4NWX5+HQy/Pw0k8j5O/u2+OHtoYxfPmStINxShcNQE/s4BGHeDjUy8YEFk0/VO3oSRggLXxe8okRyrtBrxoBdVn3MD4D/K7Rs3htJV/ksp8OPr0zh7FmiLyrh4s6Vdv7yUsbCJnolj7SwsV5AHU5O5UrtZInYQK9chOcfn8ZqrZ3g7Y8A3wq+QhfU94NBlxJXXbu7RKHfeq5pvqVayf5IvDpTRjF4ef2/Xx+bx/PcZzPmkDZW1X3fn0cyr96Thy+SPIRvqasG5iqSVCXn/tJidPuv7u5/kLcACLgcw6/sJIvD37u38+ne/vY5MFxPj7gKTHBC8/NwI4bzwrhp0k+wscjGkBT2n1PicsW2uZxzpJtWQXgcw6/gJKP0GXBz1/y6d4+HnGIp8QELz4/A9tvPCs7+eRY3gO6CjIM3FGyk5n+vKNucsbjjOQZfgElXzb8/Cef7u1jkydhghFpE+z9ug/Kv3JOdvI15Xi7GAR16Zlp+7b3ryvBctgmDzXVL+cRfoEln6f08Dcu+XRvH5s8OM63avszmuDDU8tQtY1NtLzk4/k5MFZO4APgIQKfNcCUocEdAye3EXNO4Rdu8hMGEMDf+OTTvX1s8qAJLNp++OMfhPsxvv/ueTCr+4gBdDKTT87LusGg8oJ2xxlDwgB2e/A6h3UyRG4DOYVfuMlPTX9hJJ/u7eN51Y5uqN7RDfu+4SP3exSe4/Cvats50KnkJr8bUw+6iiFQl54N3XTT2c8nDECuAnVT+5s8F3II/7PkZ5N8QW+/shc05b1kqIdP+yi857MPcvKTrybpPwdGHP6VntufAh+ryRL+K2ddYNHtmMkB/CJIPg8+q8JJfja9fXH4XPJZ+LryAdCU9ixpS7u/SPMnZbdMHMCrgNAASuAXQ/KT268mVGjJl4KvMPkopsqP6T9Ac08UGRJa/RMe53wcuFL4xZB8CnxcNPiM8Iss+Sh9xSjCn2Toez9dDvO4qcEVA6ctoBB+kSQ/HfwtnHxNWQ8YVONQc+sZM81btOxm3380ui8ogP9Z8gs1+erSc8BUTkHNjg9/SHNOW1qt93MO69TpBtdSHHYm+MWbfLGHvrTwizD56tKzYKicwL8/U17+9p/RnDOWwxG83mkLTtY7oqngt0jySfq3dPLPkoaPpqxvUnfLB39L85VVdtPQDQ5raM6DJjD7EuCLPvlK4Bdr8rHbVz4wV1V6+gaaq6Ky6Ef+0WENTdQ7F7ds8hOi4Rdl8rHX7wNNWf9k9bZT/0TzzKoYZvDLDmvodINzGewWf1rwxZj8tPCLLfml7NM+jvU1Zf2na0vf/TLNcV21zf7+dXZz4BlXXQTcdXNC+EWd/Dj4Ik6+XjVKxvra8r5ntnHTvPkou2nC6LCG++odS+CwhKDONF6cyccvYRCDXzTJZ8Fjexf7+9qygX516TmG5pWXwoUEdWb//XZLcN5jXyRGSJt+GnwhJD8Bvxjv+awBcFYPl3Vpy/sX1KU9+/Oa+nRl0w7/jd0UOGA3+4Mu2xy46xbAYQ6CDa8IGeFvcvITKp7k498hdFzMYagcx/t8UFve91Dtre99ieay4aXTeb9Qx0zV1ZknX7WZ/H67eQrctgVw2RbAaY2AwzINdnMI6pgpqGP8CdmMfrAxk2Az8jUBNgMrq2ESrOQ4AVY9ysc7+sCC0nEaT5V2HMxEXlYaofAbtPEbNDnh16kmzmtHBcIt1pm48Dyhala4+SLuwInCbdiSGiLS47GSFb6fj2/o4hs6nPB1Lb1qCAyqYTBUjoKxcpykHC/xuooBnBae0pT3v6or67Prbv7gCzSHgii7/dPrbCb/NjszdZeNmfh3i9H7K6vRe8ZiGPNa9WOzVr03ZtGPJaXjNJqQGaUdiZm13JEnzUjMpBmOmciROx+OmdSpYlC1Q2k0SITfnStQ9UBC+K1aCVWh+lKE++3jjtusepNSscJ9+HAjpoQqeEei7hi+oJlUT0xT3j2rLuv2ast7zmjKzr2pK+97WlvWf5e6bOgWyYmcLOr/AbeFhD6UKN40AAAAAElFTkSuQmCC" alt=""><div style="flex:1"><b>Review 360 Inspector</b><span class="muted">2.4.0</span><br>Check alt text, decorative images, closed captions, and notes…</div><span class="toggle"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">6</span>Pin the icon to your toolbar</h3>
+      <p>Click the puzzle piece at the top right of Chrome. Find <b>Review 360 Inspector</b> and click its pin.</p>
+      <p>The icon now stays in your toolbar, ready whenever you need it.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">New tab</div><span class="tool hot"><svg><use href="#i-puzzle"/></svg></span></div>
+      <div class="screen" style="text-align:right">
+        <div class="menu" style="text-align:left">
+          <span class="row" style="gap:8px"><img src="data:image/png;base64,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" alt="" style="width:18px">Review 360 Inspector <span class="tool hot" style="margin-left:auto"><svg><use href="#i-pin"/></svg></span></span>
+        </div>
+        <div style="margin-top:8px"><span class="label">Puzzle piece, then the pin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>That's the whole install</strong>
+    You only do Part 1 once. From now on, start at Part 2.
+  </div>
+</section>
+
+<!-- ============ 4. Open a course ============ -->
+<section class="page">
+  <p class="eyebrow">Part 2 · Each time you review</p>
+  <h2>Open a course</h2>
+  <div class="rule"></div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">7</span>Open the course</h3>
+      <p>Open your Review 360 link (or the published course) in Chrome. If you see a <b>Start</b> or play button, click it, and wait until a real slide is on screen.</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">360.articulate.com/review/…</div></div>
+      <div class="screen" style="background:#1a1718;min-height:110px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+        <span class="hot" style="color:#fff;border:2px solid #fff;border-radius:999px;padding:7px 18px;font:13px var(--heavy)">Start course</span>
+        <span class="label" style="background:#fff;color:#000">Click it if you see it</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="text">
+      <h3><span class="num">8</span>Click the toolbar icon</h3>
+      <p>Click the indigo icon in the toolbar. The inspector opens in a panel on the right side of Chrome.</p>
+      <p>It's ready when the dark header says <b>Connected to</b> your course and how many slides it has.</p>
+      <p class="muted">If it says it is looking for a course, wait until a slide is showing and click <b>Refresh</b> (the circular arrow).</p>
+    </div>
+    <div class="window">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="addr">360.articulate.com/review/…</div><span class="tool hot"><img src="data:image/png;base64,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" alt=""></span></div>
+      <div class="screen" style="padding:10px">
+        <div class="pm" style="max-width:none">
+          <div class="pm-head">
+            <div class="row" style="flex-wrap:nowrap">
+              <div class="pm-brand" style="flex:1"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM2MzY2RjEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNDMzOENBIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cmVjdCB4PSIyMCIgeT0iMjgiIHdpZHRoPSI2NiIgaGVpZ2h0PSI0OCIgcng9IjgiLz4KICAgIDxjaXJjbGUgY3g9IjgyIiBjeT0iODAiIHI9IjE4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgICA8cGF0aCBkPSJNOTUgOTNsMTMgMTMiLz4KICA8L2c+Cjwvc3ZnPgo=" alt=""><div class="pm-title"><div class="pm-name">Review 360 Inspector</div></div></div>
+            </div>
+            <div class="pm-status" style="margin-top:9px"><i></i><span>Connected to Sample course</span><span>24 slides</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Prefer DevTools?</strong>
+    Press <kbd>F12</kbd> on the course page and open the <b>Review 360 Inspector</b> tab. If you don't see it, click <b>»</b> to find it, or close and reopen DevTools once after installing. Use this when the side panel covers too much of the course.
+  </div>
+  <div class="callout">
+    <strong>Course saved on your computer?</strong>
+    For a course opened from a folder (the address starts with <code>file://</code>), go to <code>chrome://extensions</code>, click <b>Details</b> on the inspector's card, and turn on <b>Allow access to file URLs</b>. Then reload the course.
+  </div>
+</section>
+
+<!-- ============ 4. Panel tour ============ -->
+<section class="page">
+  <p class="eyebrow">Part 3 · Find your way around</p>
+  <h2>The parts of the panel</h2>
+  <div class="rule"></div>
+  <div class="split">
+    <div class="pm" style="overflow:visible;margin-top:12px">
+      <div class="pm-head" style="border-radius:13px 13px 0 0">
+        <div class="row" style="flex-wrap:nowrap">
+          <div class="pm-brand" style="flex:1"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM2MzY2RjEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNDMzOENBIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cmVjdCB4PSIyMCIgeT0iMjgiIHdpZHRoPSI2NiIgaGVpZ2h0PSI0OCIgcng9IjgiLz4KICAgIDxjaXJjbGUgY3g9IjgyIiBjeT0iODAiIHI9IjE4IiBmaWxsPSJ1cmwoI2cpIi8+CiAgICA8cGF0aCBkPSJNOTUgOTNsMTMgMTMiLz4KICA8L2c+Cjwvc3ZnPgo=" alt=""><div class="pm-title"><div class="pm-name">Review 360 Inspector</div></div></div>
+          <span class="pm-sq anchor"><svg><use href="#i-refresh"/></svg><span class="mk at-top">1</span></span><span class="pm-sq anchor"><svg><use href="#i-theme"/></svg><span class="mk at-top">2</span></span>
+        </div>
+        <div class="pm-promise"><svg><use href="#i-eye"/></svg>Never changes the published course file.</div>
+        <div class="pm-status anchor"><span class="mk at-left">3</span><i></i><span>Connected to Sample course</span><span>24 slides</span></div>
+      </div>
+      <div class="pm-tabs anchor"><span class="mk at-edge">4</span>
+        <div class="pm-tab on"><svg><use href="#i-presentation"/></svg>Slides</div>
+        <div class="pm-tab"><svg><use href="#i-check-c"/></svg>Knowledge check</div>
+        <div class="pm-tab"><svg><use href="#i-image"/></svg>Alt text</div>
+        <div class="pm-tab"><svg><use href="#i-captions"/></svg>Captions</div>
+        <div class="pm-tab"><svg><use href="#i-notes"/></svg>Notes</div>
+      </div>
+      <div class="pm-bar anchor">
+        <span class="mk at-edge">5</span>
+        <div class="t"><div class="pm-eb">On screen · 1.3</div><b>Target audience</b></div>
+        <span class="pm-ib"><svg><use href="#i-prev"/></svg></span><span class="pm-ib"><svg><use href="#i-next"/></svg></span><span class="pm-ib txt anchor"><svg><use href="#i-reset"/></svg>Reset slide<span class="mk at-top">6</span></span>
+      </div>
+      <div class="pm-body" style="min-height:110px"><div class="pm-intro">The open tab's content appears here.</div></div>
+      <div class="pm-foot" style="border-radius:0 0 13px 13px"><div class="b anchor">Save a copy of this view<span class="mk at-left">7</span></div><div class="c">Updates every 2 seconds. Pauses while you type.</div></div>
+    </div>
+    <ol class="legend">
+      <li><span class="n">1</span><span><b>Refresh.</b> Looks for the course again. Use it after the course loads or if the panel seems stuck.</span></li>
+      <li><span class="n">2</span><span><b>Light or dark.</b> Switches the panel between a light and a dark background.</span></li>
+      <li><span class="n">3</span><span><b>Status.</b> A green dot and <b>Connected to …</b> means it found the course. It also counts the slides.</span></li>
+      <li><span class="n">4</span><span><b>Tabs.</b> Click one to switch. The open tab is underlined in indigo.</span></li>
+      <li><span class="n">5</span><span><b>On screen.</b> Always shows the slide the course is on, with its scene and slide number.</span></li>
+      <li><span class="n">6</span><span><b>Previous, Next, Reset slide.</b> Move one slide back or forward. <b>Reset slide</b> puts only this slide back the way it opened.</span></li>
+      <li><span class="n">7</span><span><b>Save a copy of this view.</b> Downloads a text file with the slide list, knowledge checks, and this slide's alt text, notes, and captions.</span></li>
+    </ol>
+  </div>
+  <div class="callout" style="margin-top:20px">
+    <strong>It keeps itself up to date</strong>
+    The panel follows the course: when the slide changes, every tab updates within two seconds. You never need to copy anything into it.
+  </div>
+  <div class="callout warn">
+    <strong>Reset slide is the only button that changes anything</strong>
+    And only the slide on screen, only until you reload the page. Reloading the browser tab puts the whole course back. The published course file is never edited.
+  </div>
+</section>
+
+<!-- ============ 5. Slides + Knowledge check ============ -->
+<section class="page">
+  <p class="eyebrow">Part 4 · The tabs</p>
+  <h2>Slides and knowledge checks</h2>
+  <div class="rule"></div>
+
+  <div class="split" style="margin-bottom:26px">
+    <div class="pm" style="overflow:visible">
+      <span class="mk" style="left:-9px;top:20px">1</span>
+      <span class="mk" style="left:-9px;top:122px">2</span>
+      <span class="mk" style="left:-9px;top:192px">3</span>
+      <div class="pm-body">
+        <div class="pm-btn">Play through</div>
+        <div class="pm-help">Plays each slide for its published length, then presses Next. Holds on each knowledge check.</div>
+        <div class="pm-help">○ Stopped &nbsp;·&nbsp; Course menu: locked by the course</div>
+        <div class="pm-filter"><svg><use href="#i-search"/></svg>Filter slides</div>
+        <div class="pm-sec">Scene 1 · Introduction</div>
+        <div>
+          <div class="pm-row"><span class="n">1.1</span>Welcome<span></span></div>
+          <div class="pm-row"><span class="n">1.2</span>Accessibility and navigation<span></span></div>
+          <div class="pm-row cur"><span class="n">1.3</span>Target audience<span class="pm-tag">ON SCREEN</span></div>
+          <div class="pm-row"><span class="n">1.4</span>Reaching providers<span class="pm-tag">Knowledge check</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px"><svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-presentation"/></svg>Slides</h3>
+      <ol class="legend">
+        <li><span class="n">1</span><span><b>Play through</b> plays the course by itself, which is handy while you record. It stops on each knowledge check so you can answer, then carries on. Click <b>Stop play through</b> to take over.</span></li>
+        <li><span class="n">2</span><span><b>Filter slides.</b> Type part of a slide title to find it fast.</span></li>
+        <li><span class="n">3</span><span><b>Click any slide</b> to jump straight to it. The highlighted row is the slide on screen; <b>Knowledge check</b> marks question slides.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:10px">If a slide won't open, the course menu is locked by the publisher. Use Play through, or press Next in the course.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="pm" style="overflow:visible">
+      <span class="mk" style="left:-9px;top:18px">4</span>
+      <span class="mk" style="left:-9px;top:120px">5</span>
+      <span class="mk" style="left:-9px;top:228px">6</span>
+      <div class="pm-body">
+        <div class="pm-dark">
+          <div class="pm-type">This question</div>
+          <div class="r">Not answered <span class="rb">Reset slide</span></div>
+          <p>Puts the slide back the way it opened, so you can choose another answer.</p>
+        </div>
+        <div class="pm-card">
+          <b style="font-size:12px">See the answer</b>
+          <div class="pm-switch" style="margin:6px 0 8px;font-size:11px">Outline the correct choice <span class="pm-sw off"></span></div>
+          <dl class="pm-answer" style="margin:0"><dt>Correct choice</dt><dd>Prove the program's relevance to their patients.</dd><dt>Passing score</dt><dd>80%</dd></dl>
+        </div>
+        <div class="pm-sec">All knowledge checks · 3</div>
+        <div>
+          <div class="pm-check"><div><b>1.4 Reaching providers</b><span class="sub">Prove the program's relevance…</span></div><span class="muted">On screen</span></div>
+          <div class="pm-check"><div><b>2.6 Choosing a channel</b><span class="sub">Email the clinic manager</span></div><span class="open">Open</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px"><svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-check-c"/></svg>Knowledge check</h3>
+      <ol class="legend">
+        <li><span class="n">4</span><span><b>This question</b> says whether the question on screen is answered, and whether it was right. <b>Reset slide</b> clears the answer and feedback so you can try every choice. Other slides and the course score stay as they are.</span></li>
+        <li><span class="n">5</span><span><b>See the answer</b> lists the correct choice and passing score. Turn on <b>Outline the correct choice</b> to box it on the slide, without answering.</span></li>
+        <li><span class="n">6</span><span><b>All knowledge checks</b> lists every question in the course. Click <b>Open</b> to jump to one.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:10px">On a slide with no question, this tab offers <b>Go to the next question</b>. <b>Slide details</b> at the bottom lists states, layers, and triggers, with a button to copy them for support.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. Alt text ============ -->
+<section class="page">
+  <p class="eyebrow">Part 4 · The tabs</p>
+  <h2>Alt text</h2>
+  <div class="rule"></div>
+  <p>Alt text is the description a screen reader speaks for an image or a button. This tab lists the images and buttons on the slide, top to bottom, with exactly what a screen reader gets, and flags anything to fix.</p>
+
+  <div class="split" style="margin-top:14px">
+    <div class="pm" style="overflow:visible">
+      <span class="mk" style="left:-9px;top:14px">1</span>
+      <span class="mk" style="left:-9px;top:42px">2</span>
+      <span class="mk" style="left:-9px;top:80px">3</span>
+      <span class="mk" style="right:-9px;top:80px">4</span>
+      <div class="pm-body">
+        <div class="pm-switch">Images and buttons only <span class="pm-sw"></span></div>
+        <div class="pm-sec">Images &amp; buttons · 5 · 2 to check</div>
+        <div class="pm-card sel">
+          <span class="pm-hl">Highlighted</span><span class="pm-ib pm-cp"><svg><use href="#i-copy"/></svg></span>
+          <div class="pm-type">Image</div><div class="pm-alt">Three people representing the target audience</div>
+          <span class="badge written"><svg><use href="#i-ok"/></svg>Written alt text · 46 characters</span>
+        </div>
+        <div class="pm-card"><span class="pm-ib pm-cp"><svg><use href="#i-copy"/></svg></span><div class="pm-type">Image</div><div class="pm-alt">Picture 3.png</div><span class="badge warn"><svg><use href="#i-warn"/></svg>Default name, not written alt text</span></div>
+        <div class="pm-card"><div class="pm-type">Image</div><div class="pm-alt none">team-photo.jpg</div><span class="badge missing"><svg><use href="#i-warn"/></svg>No alt text</span></div>
+        <div class="pm-card"><div class="pm-type">Image</div><div class="pm-alt none">wave-background.png</div><span class="badge decorative"><svg><use href="#i-image"/></svg>Decorative · hidden from screen readers</span></div>
+        <div class="pm-card"><span class="pm-ib pm-cp"><svg><use href="#i-copy"/></svg></span><div class="pm-type">Button</div><div class="pm-alt">Submit</div><span class="badge written"><svg><use href="#i-ok"/></svg>Written alt text · 6 characters</span></div>
+      </div>
+    </div>
+    <div>
+      <ol class="legend">
+        <li><span class="n">1</span><span><b>Images and buttons only</b> is on by default. Turn it off to also see text, shapes, and answer choices.</span></li>
+        <li><span class="n">2</span><span><b>The count</b> tells you how many items need attention on this slide.</span></li>
+        <li><span class="n">3</span><span><b>Click a card</b> to draw a box around that object on the slide. The card gets an indigo outline. Click it again to clear.</span></li>
+        <li><span class="n">4</span><span><b>Copy</b> puts the alt text on your clipboard, ready to paste into a review note.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:10px">An image with no alt text shows its file name, in grey, so you can find it in the project. Player controls and anything hidden or invisible are left out.</p>
+    </div>
+  </div>
+
+  <table style="margin-top:18px">
+    <tr><th>Badge</th><th>What it means</th><th>What to do</th></tr>
+    <tr><td><span class="badge written"><svg><use href="#i-ok"/></svg>Written alt text</span></td><td>Someone wrote a description.</td><td>Read it. Does it describe the image well?</td></tr>
+    <tr><td><span class="badge warn"><svg><use href="#i-warn"/></svg>Default name, not written alt text</span></td><td>Storyline's placeholder was left in, such as a file name or "Rectangle 7".</td><td>Ask for real alt text, or mark it decorative.</td></tr>
+    <tr><td><span class="badge missing"><svg><use href="#i-warn"/></svg>No alt text</span></td><td>A screen reader gets nothing for this image.</td><td>Ask for alt text, or mark it decorative.</td></tr>
+    <tr><td><span class="badge decorative"><svg><use href="#i-image"/></svg>Decorative · hidden from screen readers</span></td><td>Set as decorative: "Object is visible to accessibility tools" is off.</td><td>Fine for decoration. Check it isn't an image that carries meaning.</td></tr>
+    <tr><td><span class="badge missing"><svg><use href="#i-warn"/></svg>Hidden from screen readers</span> on a button</td><td>A button or answer choice that screen readers can't reach.</td><td>Flag it: learners need to use it.</td></tr>
+  </table>
+</section>
+
+<!-- ============ 7. Captions + Notes ============ -->
+<section class="page">
+  <p class="eyebrow">Part 4 · The tabs</p>
+  <h2>Captions and notes</h2>
+  <div class="rule"></div>
+  <p>Storyline won't let you copy captions or notes. These two tabs show them as plain text for the slide on screen, with copy buttons, and you never have to play the slide.</p>
+
+  <div class="split" style="margin:16px 0 26px">
+    <div class="pm" style="overflow:visible">
+      <span class="mk" style="right:-9px;top:12px">1</span>
+      <span class="mk" style="left:-9px;top:52px">2</span>
+      <div class="pm-body">
+        <div class="pm-sec">Closed captions · 3 <span class="pm-copy">Copy captions<svg><use href="#i-copy"/></svg></span></div>
+        <div class="pm-capg">
+          <div class="pm-sec">Base layer · Audio · 3 lines</div>
+          <div class="pm-cap"><span class="tm">0:00</span>A target audience is a group of people with certain demographics and behavior.</div>
+          <div class="pm-cap"><span class="tm">0:06</span>Before you raise awareness of your program,</div>
+          <div class="pm-cap"><span class="tm">0:09</span>map out your target audience and their needs.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px"><svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-captions"/></svg>Captions</h3>
+      <ol class="legend">
+        <li><span class="n">1</span><span><b>Copy captions</b> copies the text, one caption per line, without the times.</span></li>
+        <li><span class="n">2</span><span><b>Each line shows when it starts.</b> Captions on another layer (feedback, for example) are listed under that layer's name.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:10px">Caption files imported as SRT, VTT, or SBV all show here. "This slide has no closed captions" means just that.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="pm" style="overflow:visible">
+      <span class="mk" style="right:-9px;top:12px">3</span>
+      <div class="pm-body">
+        <div class="pm-sec">Notes <span class="pm-copy">Copy notes<svg><use href="#i-copy"/></svg></span></div>
+        <div class="pm-notes">A target audience is a group of people with certain demographics and behavior. Demographics could include age, occupation, disease conditions, and more.<br><br>Before you seek to raise awareness of your program, it's important to map out your target audience and their needs.</div>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px"><svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-notes"/></svg>Notes</h3>
+      <ol class="legend">
+        <li><span class="n">3</span><span><b>Copy notes</b> copies the slide's notes as plain text, one line per paragraph.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:10px">These are the same notes the course shows in its Notes tab (some courses call it Transcript).</p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:22px">
+    <strong>Quick review routine</strong>
+    Open a slide, then glance through <b>Alt text</b>, <b>Captions</b>, and <b>Notes</b>. Copy what you need into your review notes, press <b>Next</b> in the slide bar, and repeat.
+  </div>
+</section>
+
+<!-- ============ 8. Troubleshooting ============ -->
+<section class="page">
+  <p class="eyebrow">If something looks wrong</p>
+  <h2>Quick fixes</h2>
+  <div class="rule"></div>
+  <table>
+    <tr><th>What you see</th><th>What to do</th></tr>
+    <tr><td>"Looking for a Storyline course"</td><td>Make sure a slide is showing (click <b>Start</b> if there's a start screen), then click <b>Refresh</b>.</td></tr>
+    <tr><td>Only the Review 360 title screen</td><td>Start the course and wait for the first slide. Then click <b>Refresh</b>.</td></tr>
+    <tr><td>Chrome says "Manifest file is missing"</td><td>You picked a folder one level too high. Choose the <b>Review 360 Inspector</b> folder that has <b>manifest.json</b> directly inside it.</td></tr>
+    <tr><td>The toolbar icon is missing</td><td>Click the puzzle piece and pin <b>Review 360 Inspector</b> again.</td></tr>
+    <tr><td>No <b>Review 360 Inspector</b> tab in DevTools</td><td>Close DevTools and press <kbd>F12</kbd> again. Look under <b>»</b>.</td></tr>
+    <tr><td>Chrome turned the tool off</td><td>Go to <code>chrome://extensions</code>, turn <b>Developer mode</b> on, and switch the inspector's card back on.</td></tr>
+    <tr><td>"Allow access to file URLs" message</td><td>On the inspector's card, click <b>Details</b> and turn that option on. Reload the course.</td></tr>
+    <tr><td>Alt text tab looks empty</td><td>Turn off <b>Images and buttons only</b> to see everything else on the slide.</td></tr>
+    <tr><td>Play through isn't moving</td><td>Press Next once. If it's a knowledge check, answer it; playback continues after you leave the question.</td></tr>
+    <tr><td>Start one slide over</td><td>Click <b>Reset slide</b> in the slide bar.</td></tr>
+    <tr><td>Start the whole course over</td><td>Reload the browser tab.</td></tr>
+    <tr><td>A new version arrives</td><td>Replace the files in your <b>Review 360 Inspector</b> folder, then click the circular reload arrow on its card at <code>chrome://extensions</code>.</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>This tool will not</strong>
+    <ul class="plain">
+      <li>Change, save, or upload the published course</li>
+      <li>Give you the publisher's project file, or open the course in Storyline</li>
+      <li>Send anything to another website. Everything stays in your browser.</li>
+    </ul>
+  </div>
+  <p class="foot-note">Review 360 Inspector 2.4.0</p>
+</section>
+</body>
+</html>

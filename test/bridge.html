@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RUNNING</title>
+</head>
+<body>
+  <pre id="out">RUNNING</pre>
+  <!-- A stand-in for a published question slide. The base layer holds a choice labelled "Correct". -->
+  <div id="preso" class="slide-window">
+    <div id="base" class="slide-layer base-layer shown" data-acc-text="Knowledge check: Review safe lifting">
+      <div class="slide-object" data-model-id="choiceA" data-acc-text="Correct" role="radio" aria-disabled="true" style="pointer-events:none">Correct</div>
+      <div class="slide-object text-right" data-model-id="choiceB">Bend at the knees</div>
+    </div>
+    <div class="slide-object-wrapper" aria-hidden="true">
+      <div class="slide-object slide-object-textbox" data-model-id="txtGlyph" data-acc-text="Send a standard flyer to all professionals"><svg><text>Send a s&#xE001;andard &#xE002;yer</text></svg></div>
+      <div class="slide-object slide-object-vectorshape" data-model-id="shapeDeco" aria-hidden="true"></div>
+    </div>
+    <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Worker lifting a box" width="10" height="10">
+    <div class="slide-object slide-object-image" data-model-id="imgWrap" data-acc-text="VA seal"><img src="story_content/seal.png" alt="" width="10" height="10"></div>
+    <div class="slide-object slide-object-vectorshape" data-model-id="svgPic"><svg width="10" height="10"><image href="story_content/chart.png" width="10" height="10"></image></svg></div>
+    <div class="slide-object slide-object-vectorshape" data-model-id="hiddenPic"><svg width="10" height="10"><image href="story_content/swirl.png" width="10" height="10"></image></svg></div>
+    <div class="slide-object slide-object-image" data-model-id="decoPic" aria-hidden="true"><img src="story_content/border.png" alt="" width="10" height="10"></div>
+    <div class="slide-object slide-object-image" data-model-id="defaultPic" data-acc-text="Picture 3.png" style="width:10px;height:10px"></div>
+    <img src="story_content/forklift%20photo.png" width="10" height="10">
+    <img src="story_content/spacer.gif" alt="" width="10" height="10">
+    <img src="story_content/ghost.png" alt="Ghost" width="0" height="0">
+    <div id="okLayer" class="slide-layer" data-acc-text="Correct" style="visibility: hidden; display: none">Well done</div>
+    <div id="noLayer" class="slide-layer" data-acc-text="Incorrect" style="visibility: hidden; display: none">Try again</div>
+  </div>
+  <!-- A player control outside the slide. -->
+  <button class="cs-button" aria-label="Show captions" style="width:30px;height:30px">CC</button>
+  <script src="../inspector-core.js"></script>
+  <script src="../page-bridge.js"></script>
+  <script>
+    var failures = [];
+    function assert(ok, text) { if (!ok) failures.push(text); }
+    function visible(id) {
+      var el = document.getElementById(id);
+      return el.style.visibility !== "hidden" && el.style.display !== "none";
+    }
+
+    // Minimal player so the core finds a slide and two layers, but whose layer.show does nothing,
+    // which forces the bridge onto its DOM fallback.
+    var layers = [
+      { id: "okLayer", title: "Correct", show: function () {}, hide: function () {} },
+      { id: "noLayer", title: "Incorrect", show: function () {}, hide: function () {} }
+    ];
+    var slide = {
+      id: "slideQ", title: "Knowledge check: Review safe lifting", slideLayers: layers,
+      slideObjects: [
+        { id: "svgPic", attributes: { accText: "Chart of injuries by year", accType: "image" }, get: function (k) { return this.attributes[k]; } },
+        { id: "hiddenPic", attributes: { accType: "image", tabEnabled: false }, get: function (k) { return this.attributes[k]; } }
+      ],
+      quiz: { choices: [{ id: "choiceB", text: "Bend at the knees", correct: true }] }
+    };
+    var vars = { "Results.Passed": false };
+    window.DS = {
+      presentation: { getFlatSlides: function () { return [slide]; }, navigation: { flow: "free" } },
+      windowManager: { getCurrentWindowSlide: function () { return slide; } }
+    };
+    window.GetPlayer = function () {
+      return {
+        GetVar: function (name) { return vars[name]; },
+        SetVar: function (name, value) { vars[name] = value; }
+      };
+    };
+
+    var api = globalThis.__lsiAltTextInspector;
+    assert(api.handle({ type: "showFeedback", kind: "correct" }).found === false, "forcing feedback is not a command any more");
+    assert(api.handle({ type: "unlock" }).found === false, "unlock is not a command any more");
+
+    var snap = api.handle({ type: "snapshot" });
+    var byId = {};
+    (snap.objects || []).forEach(function (o) { byId[o.id] = o; });
+    assert(byId.txtGlyph && byId.txtGlyph.alt === "Send a standard flyer to all professionals", "alt text comes from the accessible text, not glyph-font text");
+    assert(byId.txtGlyph && byId.txtGlyph.hasAlt === true && byId.txtGlyph.type === "text", "alt text and text type are detected");
+    assert(!byId.shapeDeco, "an empty, zero-sized shape is left out");
+    assert(byId.choiceB && byId.choiceB.type === "text" && byId.choiceB.hasAlt === false, "a Storyline object with no alt text is listed as text, outside images and buttons");
+    assert(snap.objects.some(function (o) { return o.alt === "Worker lifting a box" && o.type === "image"; }), "an image with an alt attribute and no model id is listed");
+    assert(!snap.objects.some(function (o) { return o.alt === "Ghost"; }), "a zero-sized image is left out");
+    assert(!snap.objects.some(function (o) { return /captions/i.test(o.alt); }), "player controls outside the slide are left out");
+    assert(snap.objects.every(function (o) { return o.id.indexOf("obj-") !== 0 || o.type === "image"; }), "only images are listed without a Storyline id");
+    assert(byId.imgWrap && byId.imgWrap.alt === "VA seal" && byId.imgWrap.type === "image", "an image wrapper with acc text is listed as an image");
+    assert(snap.objects.filter(function (o) { return o.fileName === "seal.png" || o.alt === "VA seal"; }).length === 1, "the <img> inside a listed wrapper is not repeated");
+    assert(byId.svgPic && byId.svgPic.alt === "Chart of injuries by year" && byId.svgPic.type === "image", "alt text missing from the element is read from the slide data");
+    assert(byId.hiddenPic && byId.hiddenPic.readerHidden === true && byId.hiddenPic.decorative === true, "an image with tabEnabled off is listed as decorative");
+    assert(byId.decoPic && byId.decoPic.readerHidden === true && byId.decoPic.decorative === true, "an image hidden from screen readers on the page is listed as decorative");
+    assert(byId.defaultPic && byId.defaultPic.defaultName === true, "a file name left as alt text is flagged as a default name");
+    assert(byId.imgWrap && byId.imgWrap.defaultName === false, "written alt text is not flagged as a default name");
+    var fork = snap.objects.filter(function (o) { return o.fileName === "forklift photo.png"; })[0];
+    assert(fork && fork.type === "image" && fork.hasAlt === false && !fork.decorative, "an image with no alt attribute is listed as missing alt text, named by file");
+    var spacer = snap.objects.filter(function (o) { return o.fileName === "spacer.gif"; })[0];
+    assert(spacer && spacer.hasAlt === false && spacer.decorative === true, "an image with an empty alt attribute is marked decorative");
+
+    // Storyline's screen reader copy (acc-<id> in .acc-shadow-dom) is what a screen reader reads.
+    var copies = document.createElement("div");
+    copies.className = "acc-shadow-dom";
+    copies.innerHTML = '<img id="acc-imgWrap" class="acc-shadow-el acc-image" aria-label="Seal of the VA" width="10" height="10"><button id="acc-btnNext" class="acc-shadow-el acc-button" style="width:20px;height:20px">Next</button>';
+    document.getElementById("preso").appendChild(copies);
+    var byCopy = {};
+    api.handle({ type: "snapshot" }).objects.forEach(function (o) { byCopy[o.id] = o; });
+    assert(byCopy.imgWrap && byCopy.imgWrap.alt === "Seal of the VA", "the screen reader copy's label is the alt text");
+    assert(byCopy.txtGlyph && byCopy.txtGlyph.readerHidden === true, "an object with no screen reader copy is hidden from screen readers");
+    assert(byCopy.svgPic && byCopy.svgPic.readerHidden === false, "the slide data's tabEnabled wins over a missing copy");
+    assert(!Object.keys(byCopy).some(function (id) { return byCopy[id].alt === "Next" || (id !== "imgWrap" && byCopy[id].alt === "Seal of the VA"); }), "the screen reader copies are not listed as objects");
+    copies.remove();
+    var hl0 = api.handle({ type: "highlight", id: fork ? fork.id : "" });
+    assert(hl0.highlightId && document.getElementById("lcia-highlight"), "an image without a model id can still be highlighted");
+    api.handle({ type: "highlight", id: fork ? fork.id : "" });
+    assert(!/[\uE000-\uF8FF]/.test(JSON.stringify(snap.objects)), "no private-use glyph characters leak into object names");
+
+    var hiddenLayerHost = document.getElementById("okLayer");
+    hiddenLayerHost.innerHTML = '<div class="slide-object" data-model-id="onHiddenLayer" data-acc-text="Should not list">x</div>';
+    var snap2 = api.handle({ type: "snapshot" });
+    assert(!snap2.objects.some(function (o) { return o.id === "onHiddenLayer"; }), "objects on a hidden layer are left out");
+
+    var hl = api.handle({ type: "highlight", id: "choiceA" });
+    var box = document.getElementById("lcia-highlight");
+    assert(hl.highlightId === "choiceA" && box && box.style.display === "block", "highlighting draws a box over the object");
+    var snap3 = api.handle({ type: "snapshot" });
+    assert(snap3.highlightId === "choiceA" && document.getElementById("lcia-highlight").style.display === "block", "the highlight survives a refresh");
+    var hl2 = api.handle({ type: "highlight", id: "choiceA" });
+    assert(hl2.highlightId === "" && document.getElementById("lcia-highlight").style.display === "none", "clicking the same object again clears the highlight");
+    var diag = api.handle({ type: "diagnose" });
+    assert(diag.ok === true && /"layerSource": "found"/.test(diag.text) && /slide-layer/.test(diag.text), "diagnostics include player layers and DOM layer elements");
+
+    var reset = api.handle({ type: "resetSlide" });
+    assert(reset.ok === true, "reset slide runs through the bridge");
+    assert(visible("base"), "base layer stays visible after Reset slide");
+    assert(!visible("noLayer") && !visible("okLayer"), "reset leaves the course's hidden layers hidden");
+    var radio = document.querySelector("[data-model-id=choiceA]");
+    assert(radio.style.visibility !== "hidden", "a choice labelled Correct is never touched");
+    assert(radio.getAttribute("aria-disabled") !== "true", "reset clears aria-disabled so radios can be selected");
+
+    document.title = failures.length ? "FAIL" : "PASS";
+    document.getElementById("out").textContent = failures.length ? "FAIL\n" + failures.join("\n") : "PASS";
+  </script>
+</body>
+</html>
